@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, abort
-from linebot import LineBotApi, WebhookParser
+from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
@@ -12,7 +12,7 @@ channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
 
 # Create instances
 line_bot_api = LineBotApi(channel_access_token)
-parser = WebhookParser(channel_secret)
+handler = WebhookHandler(channel_secret)
 
 
 @app.route("/callback", methods=['POST'])
