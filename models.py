@@ -18,8 +18,9 @@ class User(db.Model):
     password = db.Column(db.String(255))
     payment  = db.Column(db.Integer)
     address  = db.Column(db.String(255))
+    init_step = db.Column(db.Integer)
 
-    def __init__(self, line_id, name=None, gender=None, email=None, password=None, payment=None, address=None):
+    def __init__(self, line_id, name=None, gender=None, email=None, password=None, payment=None, address=None, init_step=0):
         self.line_id  = line_id
         self.name     = name
         self.gender   = gender
@@ -27,3 +28,4 @@ class User(db.Model):
         self.password = password
         self.payment  = payment
         self.address  = address
+        self.init_step = init_step

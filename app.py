@@ -54,11 +54,40 @@ def message_init(event):
 
 @handler.add(MessageEvent, message=TextMessage)
 def message_text(event):
-    print(event)
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text='お名前を「'+event.message.text+'」と設定しました。')
-    )
+    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    # name
+    if user.init_step == 0:
+        line_bot_api.reply_message(
+            event.reply_token,
+            [
+                TextSendMessage(text='ありがとうございます。\nお名前を「'+event.message.text+'」と設定しました。'),
+                TextSendMessage(text='続いて、アカウントの作成をしていきましょう。\nメールアドレスを入力してください。')
+            ]
+        )
+    # email
+    elif user.init_step == 1:
+        line_bot_api.reply_message(
+            event.reply_token,
+            [
+                TextSendMessage(text='メールアドレスを「'+event.message.text+'」に設定しました。'),
+                TextSendMessage(text='続いて、アカウントのパスワードを設定してください。')
+            ]
+        )
+    # password
+    elif user.init_step == 2:
+        line_bot_api.reply_message(
+            event.reply_token,
+            [
+                TextSendMessage(text='パスワードを'+event.message.text+'」に設定しました。'),
+                TextSendMessage(
+                    text=
+                        'これで初期設定は完了です！\n\n
+                        このLINE botでは以下の設定や確認ができます。\n
+                        各種設定を行いたい => 「設定」と入力\n
+                        フィードバック => 「FB」と入力'
+                )
+            ]
+        )
 
 
 if __name__ == "__main__":
