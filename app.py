@@ -170,32 +170,32 @@ def on_postback(event):
         msg_template = ButtonsTemplate(
             text='メールアドレスを変更しますか？',
             actions=[
-                MessageAction(label='change_email', text='アドレスを変更する'),
-                MessageAction(text='変更しない')
+                MessageAction(label='change_email_yes', text='アドレスを変更する'),
+                MessageAction(label='change_email_no', text='変更しない')
             ]
         )
     elif event.postback.data == 'password':
         msg_template = ButtonsTemplate(
             text='パスワードを変更しますか？',
             actions=[
-                MessageAction(label='change_password', text='パスワードを変更する'),
-                MessageAction(text='変更しない')
+                MessageAction(label='change_password_yes', text='パスワードを変更する'),
+                MessageAction(label='change_password_no', text='変更しない')
             ]
         )
     elif event.postback.data == 'payment_method':
         msg_template = ButtonsTemplate(
             text='決済手段を変更しますか？',
             actions=[
-                MessageAction(label='change_payment_method', text='決済手段を変更する'),
-                MessageAction(text='変更しない')
+                MessageAction(label='change_payment_method_yes', text='決済手段を変更する'),
+                MessageAction(label='change_payment_method_no', text='変更しない')
             ]
         )
     elif event.postback.data == 'address':
         msg_template = ButtonsTemplate(
             text='住所を変更しますか？',
             actions=[
-                MessageAction(label='change_address', text='住所を変更する'),
-                MessageAction(text='変更しない')
+                MessageAction(label='change_address_yes', text='住所を変更する'),
+                MessageAction(label='change_address_no', text='変更しない')
             ]
         )
     line_bot_api.reply_message(
