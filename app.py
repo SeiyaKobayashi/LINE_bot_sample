@@ -1,10 +1,17 @@
+# app.py
+
 import os
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import (
+    FollowEvent, MessageEvent, TextMessage, TextSendMessage,
+    TemplateSendMessage, ButtonsTemplate
+)
+from . import create_app
+from models import db, User
 
-app = Flask(__name__)
+app = create_app()
 
 # Get chnnel secret and channel access token from environment
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -17,13 +24,10 @@ handler = WebhookHandler(channel_secret)
 
 @app.route("/callback", methods=['POST'])
 def callback():
-    # get X-Line-Signature header value
+    # get X-Line-Signature header from request
     signature = request.headers['X-Line-Signature']
-
     # get request body as text
     body = request.get_data(as_text=True)
-    app.logger.info("Request body: " + body)
-
     # handle webhook body
     try:
         handler.handle(body, signature)
@@ -33,14 +37,43 @@ def callback():
     return 'OK'
 
 
-@handler.add(MessageEvent, message=TextMessage)
-def message_text(event):
+@handler.add(FollowEvent)
+def message_init(event):
+    line_id = line_bot_api.get_profile(event.source.user_id).user_id
+    db.session.add(User(line_id=line_id))
+    db.session.commit()
+
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=event.message.text)
+        TextSendMessage(
+            text='友達追加ありがとうございます！\n\n
+                  iHack 公式LINE botです！'
+        )
+    )
+
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(
+            text='LINE botはあなたのことをなんとお呼びすればよいですか？\n
+                  お名前またはニックネームを教えてください。',
+            name=True
+        )
     )
 
 
-# Driver
+@handler.add(MessageEvent, message=TextMessage)
+def message_text(event):
+    if event.message.name:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='お名前を「'+event.message.text+'」と設定しました。')
+        )
+    else:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=event.message.text)
+        )
+
+
 if __name__ == "__main__":
     app.run()
