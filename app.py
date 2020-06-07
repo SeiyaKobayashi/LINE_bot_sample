@@ -130,7 +130,6 @@ def message_text(event):
             )
         # WIP starts (should use LIFF)
         elif event.message.text == 'メールアドレスを変更する':
-            user.email =
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
