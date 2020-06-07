@@ -81,10 +81,7 @@ def message_text(event):
                 TextSendMessage(text='パスワードを'+event.message.text+'」に設定しました。'),
                 TextSendMessage(
                     text=
-                        'これで初期設定は完了です！\n\n
-                        このLINE botでは以下の設定や確認ができます。\n
-                        各種設定を行いたい => 「設定」と入力\n
-                        フィードバック => 「FB」と入力'
+                        'これで初期設定は完了です！\n\nこのLINE botでは以下の設定や確認ができます。\n各種設定を行いたい => 「設定」と入力\nフィードバック => 「FB」と入力'
                 )
             ]
         )
