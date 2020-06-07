@@ -5,8 +5,9 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
-    FollowEvent, MessageEvent, TextMessage, TextSendMessage,
-    TemplateSendMessage, ButtonsTemplate
+    FollowEvent, MessageEvent, PostbackEvent,
+    TextMessage, TextSendMessage, TemplateSendMessage,
+    ButtonsTemplate, PostbackTemplateAction
 )
 from __init__ import create_app
 from models import db, User
@@ -62,8 +63,8 @@ def message_init(event):
 
 @handler.add(MessageEvent, message=TextMessage)
 def message_text(event):
-    print('event:', event)
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+
     if not user.name or not user.email or not user.password:     # If initial setup is not done
         if user.name == None:     # Ask name
             user.name = event.message.text
@@ -88,25 +89,144 @@ def message_text(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='パスワードを設定しました。これで初期設定は完了です！\n\n今後の操作方法は以下をご確認ください。\n各種設定: 「設定」と入力'
+                    text='パスワードを設定しました。\nこれで初期設定は完了です！\n\n \
+                          今後の操作方法は以下をご確認ください。\n各種設定:「設定」と入力\n登録情報の参照:「履歴」と入力'
                 )
             )
         db.session.commit()
+
     else:     # If initial setup is done
-        if '履歴' in event.message.text:
+        if '設定' in event.message.text:
+            msg_template = ButtonsTemplate(
+                text='各種設定',
+                actions=[
+                    PostbackTemplateAction(
+                        label='メールアドレス',
+                        data='email'
+                    ),
+                    PostbackTemplateAction(
+                        label='パスワード',
+                        data='password'
+                    ),
+                    PostbackTemplateAction(
+                        label='決済手段',
+                        data='payment_method'
+                    ),
+                    PostbackTemplateAction(
+                        label='住所',
+                        data='address'
+                    )
+                ]
+            )
+            line_bot_api.reply_message(
+                event.reply_token,
+                TemplateSendMessage(template=msg_template)
+            )
+        elif '履歴' in event.message.text:
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='名前: '+user.name+'Email: '+user.email+'パスワード: '+user.password
+                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
+                )
+            )
+        elif 'メールアドレスを変更する' in event.message.text:
+
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
+                )
+            )
+        elif 'パスワードを変更する' in event.message.text:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
+                )
+            )
+        elif '決済手段を変更する' in event.message.text:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
+                )
+            )
+        elif '住所を変更する' in event.message.text:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
         else:
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(
-                    text='こんばんは。'
-                )
+                TextSendMessage(text=event.message.text)
             )
+
+
+@handler.add(PostbackEvent)
+def on_postback(event):
+    if event.postback.data == 'email':
+        msg_template = ButtonsTemplate(
+            text='メールアドレスを変更しますか？',
+            actions=[
+                PostbackTemplateAction(
+                    label='アドレスを変更する',
+                    data='email_yes'
+                ),
+                PostbackTemplateAction(
+                    label='変更しない',
+                    data='email_no'
+                )
+            ]
+        )
+    elif event.postback.data == 'password':
+        msg_template = ButtonsTemplate(
+            text='パスワードを変更しますか？',
+            actions=[
+                PostbackTemplateAction(
+                    label='パスワードを変更する',
+                    data='password_yes'
+                ),
+                PostbackTemplateAction(
+                    label='変更しない',
+                    data='password_no'
+                )
+            ]
+        )
+    elif event.postback.data == 'payment_method':
+        msg_template = ButtonsTemplate(
+            text='決済手段を変更しますか？',
+            actions=[
+                PostbackTemplateAction(
+                    label='決済手段を変更する',
+                    data='payment_method_yes'
+                ),
+                PostbackTemplateAction(
+                    label='変更しない',
+                    data='payment_method_no'
+                )
+            ]
+        )
+    elif event.postback.data == 'address':
+        msg_template = ButtonsTemplate(
+            text='住所を変更しますか？',
+            actions=[
+                PostbackTemplateAction(
+                    label='住所を変更する',
+                    data='address_yes'
+                ),
+                PostbackTemplateAction(
+                    label='変更しない',
+                    data='address_no'
+                )
+            ]
+        )
+    line_bot_api.reply_message(
+        event.reply_token,
+        TemplateSendMessage(template=msg_template)
+    )
 
 if __name__ == "__main__":
     app.run()
