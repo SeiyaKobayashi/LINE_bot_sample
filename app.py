@@ -7,7 +7,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     FollowEvent, MessageEvent, PostbackEvent,
     TextMessage, TextSendMessage, TemplateSendMessage,
-    ButtonsTemplate, PostbackTemplateAction
+    ButtonsTemplate, MessageAction, PostbackTemplateAction
 )
 from __init__ import create_app
 from models import db, User
@@ -89,8 +89,8 @@ def message_text(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='パスワードを設定しました。\nこれで初期設定は完了です！\n\n \
-                          今後の操作方法は以下をご確認ください。\n各種設定:「設定」と入力\n登録情報の参照:「履歴」と入力'
+                    text='パスワードを設定しました。\nこれで初期設定は完了です！\n\n\
+                    今後の操作方法は以下をご確認ください。\n各種設定:「設定」と入力\n登録情報の参照:「履歴」と入力'
                 )
             )
         db.session.commit()
@@ -129,35 +129,35 @@ def message_text(event):
                     text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
-        elif 'メールアドレスを変更する' in event.message.text:
-
+        elif event.message.text == 'メールアドレスを変更する':
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
                     text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
-        elif 'パスワードを変更する' in event.message.text:
+        elif event.message.text == 'パスワードを変更する':
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
                     text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
-        elif '決済手段を変更する' in event.message.text:
+        elif event.message.text == '決済手段を変更する':
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
                     text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
-        elif '住所を変更する' in event.message.text:
+        elif event.message.text == '住所を変更する':
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
                     text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
+        elif　event.message.text == '変更しない'
         else:
             line_bot_api.reply_message(
                 event.reply_token,
@@ -171,56 +171,32 @@ def on_postback(event):
         msg_template = ButtonsTemplate(
             text='メールアドレスを変更しますか？',
             actions=[
-                PostbackTemplateAction(
-                    label='アドレスを変更する',
-                    data='email_yes'
-                ),
-                PostbackTemplateAction(
-                    label='変更しない',
-                    data='email_no'
-                )
+                MessageAction(text='アドレスを変更する'),
+                MessageAction(text='変更しない')
             ]
         )
     elif event.postback.data == 'password':
         msg_template = ButtonsTemplate(
             text='パスワードを変更しますか？',
             actions=[
-                PostbackTemplateAction(
-                    label='パスワードを変更する',
-                    data='password_yes'
-                ),
-                PostbackTemplateAction(
-                    label='変更しない',
-                    data='password_no'
-                )
+                MessageAction(text='パスワードを変更する'),
+                MessageAction(text='変更しない')
             ]
         )
     elif event.postback.data == 'payment_method':
         msg_template = ButtonsTemplate(
             text='決済手段を変更しますか？',
             actions=[
-                PostbackTemplateAction(
-                    label='決済手段を変更する',
-                    data='payment_method_yes'
-                ),
-                PostbackTemplateAction(
-                    label='変更しない',
-                    data='payment_method_no'
-                )
+                MessageAction(text='決済手段を変更する'),
+                MessageAction(text='変更しない')
             ]
         )
     elif event.postback.data == 'address':
         msg_template = ButtonsTemplate(
             text='住所を変更しますか？',
             actions=[
-                PostbackTemplateAction(
-                    label='住所を変更する',
-                    data='address_yes'
-                ),
-                PostbackTemplateAction(
-                    label='変更しない',
-                    data='address_no'
-                )
+                MessageAction(text='住所を変更する'),
+                MessageAction(text='変更しない')
             ]
         )
     line_bot_api.reply_message(
