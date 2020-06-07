@@ -157,7 +157,6 @@ def message_text(event):
                     text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
-        elif　event.message.text == '変更しない'
         else:
             line_bot_api.reply_message(
                 event.reply_token,
