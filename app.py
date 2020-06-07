@@ -8,7 +8,7 @@ from linebot.models import (
     FollowEvent, MessageEvent, TextMessage, TextSendMessage,
     TemplateSendMessage, ButtonsTemplate
 )
-from . import create_app
+from __init__ import create_app
 from models import db, User
 
 app = create_app()
