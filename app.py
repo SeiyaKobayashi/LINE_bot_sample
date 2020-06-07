@@ -86,6 +86,9 @@ def message_text(event):
             ]
         )
 
+    user.init_step += 1
+    db.session.commit()
+
 
 if __name__ == "__main__":
     app.run()
