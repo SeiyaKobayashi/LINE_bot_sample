@@ -120,7 +120,7 @@ def message_text(event):
             )
             line_bot_api.reply_message(
                 event.reply_token,
-                TemplateSendMessage(template=msg_template)
+                TemplateSendMessage(alt_text='settings template', template=msg_template)
             )
         elif '履歴' in event.message.text:
             line_bot_api.reply_message(
@@ -225,7 +225,7 @@ def on_postback(event):
         )
     line_bot_api.reply_message(
         event.reply_token,
-        TemplateSendMessage(template=msg_template)
+        TemplateSendMessage(alt_text='setting template', template=msg_template)
     )
 
 if __name__ == "__main__":
