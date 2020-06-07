@@ -46,16 +46,14 @@ def message_init(event):
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(
-            text='友達追加ありがとうございます！\n\n
-                  iHack 公式LINE botです！'
+            text='友達追加ありがとうございます！\n\niHack 公式LINE botです！'
         )
     )
 
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(
-            text='LINE botはあなたのことをなんとお呼びすればよいですか？\n
-                  お名前またはニックネームを教えてください。',
+            text='LINE botはあなたのことをなんとお呼びすればよいですか？\nお名前またはニックネームを教えてください。',
             name=True
         )
     )
