@@ -55,7 +55,7 @@ def message_init(event):
             event.reply_token,
             [
                 TextSendMessage(text='友達追加ありがとうございます！'),
-                TextSendMessage(text='あなたのことをなんとお呼びすればよいですか？\nお名前またはニックネームを教えてください。')
+                TextSendMessage(text='あなたのことをなんとお呼びすればよいですか？お名前またはニックネームを教えてください。')
             ]
         )
 
@@ -71,7 +71,7 @@ def message_text(event):
                 event.reply_token,
                 [
                     TextSendMessage(text=event.message.text+'さん、こんばんは！'),
-                    TextSendMessage(text='それでは、アカウントの作成をしていきましょう。\nよく使用するメールアドレスを入力してください。')
+                    TextSendMessage(text='それでは、アカウントの作成をしていきましょう。よく使用するメールアドレスを入力してください。')
                 ]
             )
         elif user.email == None:     # Ask email
@@ -88,17 +88,25 @@ def message_text(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='これで初期設定は完了です！\n\n今後の操作方法は以下をご確認ください。\n各種設定: 「設定」と入力'
+                    text='パスワードを設定しました。これで初期設定は完了です！\n\n今後の操作方法は以下をご確認ください。\n各種設定: 「設定」と入力'
                 )
             )
         db.session.commit()
     else:     # If initial setup is done
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(
-                text='こんばんは。'
+        if '履歴' in event.message.text:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='名前: '+user.name+'Email: '+user.email+'パスワード: '+user.password
+                )
             )
-        )
+        else:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='こんばんは。'
+                )
+            )
 
 if __name__ == "__main__":
     app.run()
