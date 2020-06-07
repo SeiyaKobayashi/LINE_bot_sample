@@ -93,7 +93,6 @@ def message_text(event):
                     今後の操作方法は以下をご確認ください。\n各種設定:「設定」と入力\n登録情報の参照:「履歴」と入力'
                 )
             )
-        db.session.commit()
 
     else:     # If initial setup is done
         if '設定' in event.message.text:
@@ -129,7 +128,9 @@ def message_text(event):
                     text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
+        # WIP starts (should use LIFF)
         elif event.message.text == 'メールアドレスを変更する':
+            user.email =
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
@@ -157,11 +158,14 @@ def message_text(event):
                     text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
                 )
             )
+        # WIP ends
         else:
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(text=event.message.text)
             )
+
+    db.session.commit()
 
 
 @handler.add(PostbackEvent)
@@ -170,32 +174,32 @@ def on_postback(event):
         msg_template = ButtonsTemplate(
             text='メールアドレスを変更しますか？',
             actions=[
-                MessageAction(label='change_email_yes', text='アドレスを変更する'),
-                MessageAction(label='change_email_no', text='変更しない')
+                MessageAction(label='はい', text='メールアドレスを変更する'),
+                MessageAction(label='いいえ', text='変更しない')
             ]
         )
     elif event.postback.data == 'password':
         msg_template = ButtonsTemplate(
             text='パスワードを変更しますか？',
             actions=[
-                MessageAction(label='change_password_yes', text='パスワードを変更する'),
-                MessageAction(label='change_password_no', text='変更しない')
+                MessageAction(label='はい', text='パスワードを変更する'),
+                MessageAction(label='いいえ', text='変更しない')
             ]
         )
     elif event.postback.data == 'payment_method':
         msg_template = ButtonsTemplate(
             text='決済手段を変更しますか？',
             actions=[
-                MessageAction(label='change_payment_method_yes', text='決済手段を変更する'),
-                MessageAction(label='change_payment_method_no', text='変更しない')
+                MessageAction(label='はい', text='決済手段を変更する'),
+                MessageAction(label='いいえ', text='変更しない')
             ]
         )
     elif event.postback.data == 'address':
         msg_template = ButtonsTemplate(
             text='住所を変更しますか？',
             actions=[
-                MessageAction(label='change_address_yes', text='住所を変更する'),
-                MessageAction(label='change_address_no', text='変更しない')
+                MessageAction(label='はい', text='住所を変更する'),
+                MessageAction(label='いいえ', text='変更しない')
             ]
         )
     line_bot_api.reply_message(
