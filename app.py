@@ -64,8 +64,9 @@ def message_init(event):
 def message_text(event):
     print('event:', event)
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
-    if init_step <= 3:     # If initial setup is done
-        if user.init_step == 0:     # Ask name
+    if not user.name or not user.email or not user.password:     # If initial setup is not done
+        if user.name == None:     # Ask name
+            user.name = event.message.text
             line_bot_api.reply_message(
                 event.reply_token,
                 [
@@ -73,7 +74,8 @@ def message_text(event):
                     TextSendMessage(text='それでは、アカウントの作成をしていきましょう。\nよく使用するメールアドレスを入力してください。')
                 ]
             )
-        elif user.init_step == 1:     # Ask email
+        elif user.email == None:     # Ask email
+            user.email = event.message.text
             line_bot_api.reply_message(
                 event.reply_token,
                 [
@@ -81,16 +83,16 @@ def message_text(event):
                     TextSendMessage(text='続いて、アカウントのパスワードを設定してください。')
                 ]
             )
-        elif user.init_step == 2:     # Ask to set password
+        elif user.password == None:     # Ask to set password
+            user.password = event.message.text
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
                     text='これで初期設定は完了です！\n\n今後の操作方法は以下をご確認ください。\n各種設定: 「設定」と入力'
                 )
             )
-        user.init_step += 1
         db.session.commit()
-    else:     # If initial setup is not done
+    else:     # If initial setup is done
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
