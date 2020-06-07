@@ -170,7 +170,7 @@ def on_postback(event):
         msg_template = ButtonsTemplate(
             text='メールアドレスを変更しますか？',
             actions=[
-                MessageAction(text='アドレスを変更する'),
+                MessageAction(label='change_email', text='アドレスを変更する'),
                 MessageAction(text='変更しない')
             ]
         )
@@ -178,7 +178,7 @@ def on_postback(event):
         msg_template = ButtonsTemplate(
             text='パスワードを変更しますか？',
             actions=[
-                MessageAction(text='パスワードを変更する'),
+                MessageAction(label='change_password', text='パスワードを変更する'),
                 MessageAction(text='変更しない')
             ]
         )
@@ -186,7 +186,7 @@ def on_postback(event):
         msg_template = ButtonsTemplate(
             text='決済手段を変更しますか？',
             actions=[
-                MessageAction(text='決済手段を変更する'),
+                MessageAction(label='change_payment_method', text='決済手段を変更する'),
                 MessageAction(text='変更しない')
             ]
         )
@@ -194,7 +194,7 @@ def on_postback(event):
         msg_template = ButtonsTemplate(
             text='住所を変更しますか？',
             actions=[
-                MessageAction(text='住所を変更する'),
+                MessageAction(label='change_address', text='住所を変更する'),
                 MessageAction(text='変更しない')
             ]
         )
