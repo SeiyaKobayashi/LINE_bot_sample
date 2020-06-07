@@ -46,31 +46,22 @@ def message_init(event):
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(
-            text='友達追加ありがとうございます！\n\niHack 公式LINE botです！'
-        )
-    )
-
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(
-            text='LINE botはあなたのことをなんとお呼びすればよいですか？\nお名前またはニックネームを教えてください。',
-            name=True
+            text=
+                [
+                    '友達追加ありがとうございます！\niHack 公式LINE botです！',
+                    'LINE botはあなたのことをなんとお呼びすればよいですか？\nお名前またはニックネームを教えてください。'
+                ]
         )
     )
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def message_text(event):
-    if event.message.name:
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text='お名前を「'+event.message.text+'」と設定しました。')
-        )
-    else:
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=event.message.text)
-        )
+    print(event)
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text='お名前を「'+event.message.text+'」と設定しました。')
+    )
 
 
 if __name__ == "__main__":
