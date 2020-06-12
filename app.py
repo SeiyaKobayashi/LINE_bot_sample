@@ -1,6 +1,7 @@
 # app.py
 
 import os
+from datetime import datetime
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -38,14 +39,31 @@ def callback():
     return 'OK'
 
 
+def setGreeting(hour):
+    if 5 <= hour and hour <= 9:
+        return 'おはようございます！'
+    elif 10 <= hour and hour <= 18:
+        return 'こんにちは！'
+    else:
+        return 'こんばんは！'
+
+
 @handler.add(FollowEvent)
 def message_init(event):
-    line_id = line_bot_api.get_profile(event.source.user_id).user_id
-    if User.query.filter_by(line_id=line_id).first():     # If user account already exists (i.e., past user)
+
+    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    greeting = setGreeting(datetime.fromtimestamp(event.timestamp).time().hour)
+
+    if user:     # If user account already exists (i.e., past user)
         line_bot_api.reply_message(
             event.reply_token,
             [
-                TextSendMessage(text='友達再追加ありがとうございます！'),
+                TextSendMessage(
+                    text=user.name + 'さん、' + greeting + '\n友達再追加ありがとうございます！'
+                ),
+                TextSendMessage(
+                    text='操作方法を再度ご確認ください。\n1.登録情報の確認 =>「履歴」と入力\n2. 各種設定の変更 =>「設定」と入力\n3. 使い方の確認 =>「使い方」と入力\n'
+                )
             ]
         )
     else:     # If new user
@@ -55,42 +73,50 @@ def message_init(event):
         line_bot_api.reply_message(
             event.reply_token,
             [
-                TextSendMessage(text='友達追加ありがとうございます！'),
-                TextSendMessage(text='あなたのことをなんとお呼びすればよいですか？お名前またはニックネームを教えてください。')
+                TextSendMessage(
+                    text=greeting + '友達追加ありがとうございます！'
+                ),
+                TextSendMessage(
+                    text='botはあなたのことをなんとお呼びすればよいですか？お名前またはニックネームを教えてください。'
+                )
             ]
         )
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def message_text(event):
+
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    greeting = setGreeting(datetime.fromtimestamp(event.timestamp).time().hour)
 
     if not user.name or not user.email or not user.password:     # If initial setup is not done
         if user.name == None:     # Ask name
             user.name = event.message.text
+            db.session.commit()
             line_bot_api.reply_message(
                 event.reply_token,
                 [
-                    TextSendMessage(text=event.message.text+'さん、こんばんは！'),
-                    TextSendMessage(text='それでは、アカウントの作成をしていきましょう。よく使用するメールアドレスを入力してください。')
+                    TextSendMessage(text=user.name + 'さん、' + greeting),
+                    TextSendMessage(text='それでは、アカウントの設定をしていきましょう！よく使用するメールアドレスを入力してください。')
                 ]
             )
         elif user.email == None:     # Ask email
             user.email = event.message.text
+            db.session.commit()
             line_bot_api.reply_message(
                 event.reply_token,
                 [
-                    TextSendMessage(text='メールアドレスを '+event.message.text+' に設定しました。'),
+                    TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。'),
                     TextSendMessage(text='続いて、アカウントのパスワードを設定してください。')
                 ]
             )
         elif user.password == None:     # Ask to set password
             user.password = event.message.text
+            db.session.commit()
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='パスワードを設定しました。\nこれで初期設定は完了です！\n\n\
-                    今後の操作方法は以下をご確認ください。\n各種設定:「設定」と入力\n登録情報の参照:「履歴」と入力'
+                    text='パスワードを設定しました。これで初期設定は完了です！\n\n今後の操作方法は以下をご確認ください。\n1.登録情報の確認 =>「履歴」と入力\n2. 各種設定の変更 =>「設定」と入力\n3. 使い方の確認 =>「使い方」と入力\n'
                 )
             )
 
@@ -164,8 +190,6 @@ def message_text(event):
                 TextSendMessage(text=event.message.text)
             )
 
-    db.session.commit()
-
 
 @handler.add(PostbackEvent)
 def on_postback(event):
@@ -177,6 +201,10 @@ def on_postback(event):
                 MessageAction(label='いいえ', text='変更しない')
             ]
         )
+        line_bot_api.reply_message(
+            event.reply_token,
+            TemplateSendMessage(alt_text='メールアドレスを変更しますか？', template=msg_template)
+        )
     elif event.postback.data == 'password':
         msg_template = ButtonsTemplate(
             text='パスワードを変更しますか？',
@@ -184,6 +212,10 @@ def on_postback(event):
                 MessageAction(label='はい', text='パスワードを変更する'),
                 MessageAction(label='いいえ', text='変更しない')
             ]
+        )
+        line_bot_api.reply_message(
+            event.reply_token,
+            TemplateSendMessage(alt_text='パスワードを変更しますか？', template=msg_template)
         )
     elif event.postback.data == 'payment_method':
         msg_template = ButtonsTemplate(
@@ -193,6 +225,10 @@ def on_postback(event):
                 MessageAction(label='いいえ', text='変更しない')
             ]
         )
+        line_bot_api.reply_message(
+            event.reply_token,
+            TemplateSendMessage(alt_text='決済手段を変更しますか？', template=msg_template)
+        )
     elif event.postback.data == 'address':
         msg_template = ButtonsTemplate(
             text='住所を変更しますか？',
@@ -201,10 +237,11 @@ def on_postback(event):
                 MessageAction(label='いいえ', text='変更しない')
             ]
         )
-    line_bot_api.reply_message(
-        event.reply_token,
-        TemplateSendMessage(alt_text='setting template', template=msg_template)
-    )
+        line_bot_api.reply_message(
+            event.reply_token,
+            TemplateSendMessage(alt_text='住所を変更しますか？', template=msg_template)
+        )
+
 
 if __name__ == "__main__":
     app.run()
