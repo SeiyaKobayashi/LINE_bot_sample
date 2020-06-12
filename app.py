@@ -50,24 +50,12 @@ def setGreeting(hour):
 
 @handler.add(FollowEvent)
 def message_init(event):
-    print(event.timestamp)
 
-    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp/1000).time().hour)
 
-    if user:     # If user account already exists (i.e., past user)
-        line_bot_api.reply_message(
-            event.reply_token,
-            [
-                TextSendMessage(
-                    text=user.name + 'さん、' + greeting + '\n友達再追加ありがとうございます！'
-                ),
-                TextSendMessage(
-                    text='操作方法を再度ご確認ください。\n1.登録情報の確認 =>「履歴」と入力\n2. 各種設定の変更 =>「設定」と入力\n3. 使い方の確認 =>「使い方」と入力\n'
-                )
-            ]
-        )
-    else:     # If new user
+    try:
+        User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    except:     # If new user
         db.session.add(User(line_id=line_id))
         db.session.commit()
 
@@ -79,6 +67,18 @@ def message_init(event):
                 ),
                 TextSendMessage(
                     text='botはあなたのことをなんとお呼びすればよいですか？お名前またはニックネームを教えてください。'
+                )
+            ]
+        )
+    else:     # If user account already exists (i.e., past user)
+        line_bot_api.reply_message(
+            event.reply_token,
+            [
+                TextSendMessage(
+                    text=user.name + 'さん、' + greeting + '\n友達再追加ありがとうございます！'
+                ),
+                TextSendMessage(
+                    text='操作方法を再度ご確認ください。\n1.登録情報の確認 =>「履歴」と入力\n2. 各種設定の変更 =>「設定」と入力\n3. 使い方の確認 =>「使い方」と入力\n'
                 )
             ]
         )
