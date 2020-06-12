@@ -54,7 +54,7 @@ def message_init(event):
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp/1000).time().hour)
 
     try:
-        User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+        user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
     except:     # If new user
         db.session.add(User(line_id=line_id))
         db.session.commit()
