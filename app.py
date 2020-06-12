@@ -52,6 +52,7 @@ def setGreeting(hour):
 def message_init(event):
 
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    print(datetime.fromtimestamp(event.timestamp/1000).time())
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp/1000).time().hour)
 
     if user:     # If user account already exists (i.e., past user)
