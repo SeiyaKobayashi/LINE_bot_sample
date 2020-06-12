@@ -50,6 +50,7 @@ def setGreeting(hour):
 
 @handler.add(FollowEvent)
 def message_init(event):
+    print(event.timestamp)
 
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp).time().hour)
