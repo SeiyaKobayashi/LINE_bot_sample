@@ -1,7 +1,7 @@
 # app.py
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -52,9 +52,7 @@ def setGreeting(hour):
 def message_init(event):
 
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
-    print(event.timestamp/1000)
-    print(datetime.fromtimestamp(event.timestamp/1000).time())
-    greeting = setGreeting(datetime.fromtimestamp(event.timestamp/1000).time().hour)
+    greeting = setGreeting(datetime.fromtimestamp(event.timestamp, timezone(timedelta(hours=+9), 'JST')).time().hour)
 
     if user:     # If user account already exists (i.e., past user)
         line_bot_api.reply_message(
@@ -89,7 +87,7 @@ def message_init(event):
 def message_text(event):
 
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
-    greeting = setGreeting(datetime.fromtimestamp(event.timestamp/1000).time().hour)
+    greeting = setGreeting(datetime.fromtimestamp(event.timestamp, timezone(timedelta(hours=+9), 'JST')).time().hour)
 
     if not user.name or not user.email or not user.password:     # If initial setup is not done
         if user.name == None:     # Ask name
