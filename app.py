@@ -53,7 +53,7 @@ def message_init(event):
     print(event.timestamp)
 
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
-    greeting = setGreeting(datetime.fromtimestamp(event.timestamp).time().hour)
+    greeting = setGreeting(datetime.fromtimestamp(event.timestamp/1000).time().hour)
 
     if user:     # If user account already exists (i.e., past user)
         line_bot_api.reply_message(
@@ -88,7 +88,7 @@ def message_init(event):
 def message_text(event):
 
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
-    greeting = setGreeting(datetime.fromtimestamp(event.timestamp).time().hour)
+    greeting = setGreeting(datetime.fromtimestamp(event.timestamp/1000).time().hour)
 
     if not user.name or not user.email or not user.password:     # If initial setup is not done
         if user.name == None:     # Ask name
