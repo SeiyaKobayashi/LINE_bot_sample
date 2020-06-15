@@ -151,7 +151,7 @@ def message_text(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text=user.name+'さん(LINE ID: '+user.line_id+')の登録情報は以下の通りです。\n\nEmail: '+user.email+'\nパスワード: '+user.password+'\n決済方法: '+(user.payment != None ? user.payment : '設定されていません')+'\n住所: '+(user.address != None ? user.address : '設定されていません')
+                    text=user.name+'さん(LINE ID: '+user.line_id+')の登録情報は以下の通りです。\n\nEmail: '+user.email+'\nパスワード: '+user.password+'\n決済方法: '+(user.payment if user.payment != None else '設定されていません')+'\n住所: '+(user.address if user.address != None else '設定されていません')
                 )
             )
         elif '使い方' in event.message.text:
