@@ -175,7 +175,7 @@ def message_text(event):
                         text='以下のリンクからフィードバックを入力してください。'
                     ),
                     TextSendMessage(
-                        text='https://liff-sample-01.herokuapp.com/send-fbs'
+                        text='https://liff.line.me/1654318751-43AoOjrg/send-fbs'
                     )
                 ]
             )
@@ -188,7 +188,7 @@ def message_text(event):
                         text='以下のリンクから各種設定を行なってください。'
                     ),
                     TextSendMessage(
-                        text='https://liff-sample-01.herokuapp.com/'
+                        text='https://liff.line.me/1654318751-43AoOjrg'
                     )
                 ]
             )
