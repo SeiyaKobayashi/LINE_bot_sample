@@ -153,7 +153,7 @@ def message_text(event):
                 event.reply_token,
                 TemplateSendMessage(alt_text='settings template', template=msg_template)
             )
-        elif '履歴' in event.message.text:
+        elif '登録情報' in event.message.text:
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
@@ -167,6 +167,18 @@ def message_text(event):
                     text='操作方法は以下をご確認ください。\n1.登録情報の確認:「登録情報」と入力\n2. 各種設定の変更:「設定」と入力\n3. 使い方の確認:「使い方」と入力\n4. フィードバック:「FB」と入力'
                 )
             )
+        elif 'FB' in event.message.text:
+            line_bot_api.reply_message(
+                event.reply_token,
+                [
+                    TextSendMessage(
+                        text='以下のリンクからフィードバックを入力してください。'
+                    ),
+                    TextSendMessage(
+                        text='https://liff-sample-01.herokuapp.com/send-fbs'
+                    )
+                ]
+            )
         # WIP: no need of templates
         elif (event.message.text == 'メールアドレスを変更する') or (event.message.text == 'パスワードを変更する') or (event.message.text == '決済手段を変更する') or (event.message.text == '住所を変更する'):
             line_bot_api.reply_message(
@@ -176,7 +188,7 @@ def message_text(event):
                         text='以下のリンクから各種設定を行なってください。'
                     ),
                     TextSendMessage(
-                        text='https://liff-sample-01.herokuapp.com/set-profile'
+                        text='https://liff-sample-01.herokuapp.com/'
                     )
                 ]
             )
