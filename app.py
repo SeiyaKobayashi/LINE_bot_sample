@@ -102,14 +102,20 @@ def message_text(event):
             )
         elif user.email == None:     # Ask email
             user.email = event.message.text
-            db.session.commit()
-            line_bot_api.reply_message(
-                event.reply_token,
-                [
-                    TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。'),
-                    TextSendMessage(text='続いて、アカウントのパスワードを設定してください。')
-                ]
-            )
+            try:
+                db.session.commit()
+                line_bot_api.reply_message(
+                    event.reply_token,
+                    [
+                        TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。'),
+                        TextSendMessage(text='続いて、アカウントのパスワードを設定してください。')
+                    ]
+                )
+            except:
+                line_bot_api.reply_message(
+                    event.reply_token,
+                    TextSendMessage(text='このメールアドレスはすでに使用されているようです。別のメールアドレスを入力してください。')
+                )
         elif user.password == None:     # Ask to set password
             user.password = event.message.text
             db.session.commit()
