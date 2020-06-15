@@ -1,7 +1,7 @@
 # app.py
 
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -62,7 +62,7 @@ def message_init(event):
                     text=user.name + 'さん、' + greeting + '\n友達再追加ありがとうございます！'
                 ),
                 TextSendMessage(
-                    text='操作方法を再度ご確認ください。\n1.登録情報の確認 =>「履歴」と入力\n2. 各種設定の変更 =>「設定」と入力\n3. 使い方の確認 =>「使い方」と入力\n'
+                    text='操作方法を再度ご確認ください。\n1.登録情報の確認:「登録情報」と入力\n2. 各種設定の変更:「設定」と入力\n3. 使い方の確認:「使い方」と入力\n4. フィードバック:「FB」と入力'
                 )
             ]
         )
@@ -77,7 +77,7 @@ def message_init(event):
                     text=greeting + '友達追加ありがとうございます！'
                 ),
                 TextSendMessage(
-                    text='botはあなたのことをなんとお呼びすればよいですか？お名前またはニックネームを教えてください。'
+                    text='このbotは、あなたのことをなんとお呼びすればよいですか？お名前またはニックネームを教えてください。'
                 )
             ]
         )
@@ -116,14 +116,14 @@ def message_text(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='パスワードを設定しました。これで初期設定は完了です！\n\n今後の操作方法は以下をご確認ください。\n1.登録情報の確認 =>「履歴」と入力\n2. 各種設定の変更 =>「設定」と入力\n3. 使い方の確認 =>「使い方」と入力\n'
+                    text='パスワードを設定しました。これで初期設定は完了です！\n\n今後の操作方法は以下をご確認ください。\n1.登録情報の確認:「登録情報」と入力\n2. 各種設定の変更:「設定」と入力\n3. 使い方の確認:「使い方」と入力\n4. フィードバック:「FB」と入力'
                 )
             )
 
     else:     # If initial setup is done
         if '設定' in event.message.text:
             msg_template = ButtonsTemplate(
-                text='各種設定',
+                text='変更したい項目をタップしてください',
                 actions=[
                     PostbackTemplateAction(
                         label='メールアドレス',
@@ -151,96 +151,62 @@ def message_text(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
+                    text=user.name+'さん(LINE ID: '+user.line_id+')の登録情報は以下の通りです。\n\nEmail: '+user.email+'\nパスワード: '+user.password+'\n決済方法: '+(user.payment != null ? user.payment : '設定されていません')+'\n住所: '+(user.address != null ? user.address : '設定されていません')
                 )
             )
-        # WIP starts (should use LIFF)
-        elif event.message.text == 'メールアドレスを変更する':
+        elif '使い方' in event.message.text:
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
+                    text='操作方法は以下をご確認ください。\n1.登録情報の確認:「登録情報」と入力\n2. 各種設定の変更:「設定」と入力\n3. 使い方の確認:「使い方」と入力\n4. フィードバック:「FB」と入力'
                 )
             )
-        elif event.message.text == 'パスワードを変更する':
+        # WIP: no need of templates
+        elif (event.message.text == 'メールアドレスを変更する') or (event.message.text == 'パスワードを変更する') or (event.message.text == '決済手段を変更する') or (event.message.text == '住所を変更する'):
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(
-                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
-                )
+                [
+                    TextSendMessage(
+                        text='以下のリンクから各種設定を行なってください。'
+                    ),
+                    TextSendMessage(
+                        text='https://liff-sample-01.herokuapp.com/set-profile'
+                    )
+                ]
             )
-        elif event.message.text == '決済手段を変更する':
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(
-                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
-                )
-            )
-        elif event.message.text == '住所を変更する':
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(
-                    text='名前: '+user.name+'\nEmail: '+user.email+'\nパスワード: '+user.password
-                )
-            )
-        # WIP ends
+        elif event.message.text == '変更しない':
+            pass
         else:
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(text=event.message.text)
+                TextSendMessage(text='会話機能は現在開発中です...')
             )
+
+
+def generateMsgTemplate(event, keyword):
+    msg_template = ButtonsTemplate(
+        text=keyword + 'を変更しますか？',
+        actions=[
+            MessageAction(label='はい', text=keyword + 'を変更する'),
+            MessageAction(label='いいえ', text='変更しない')
+        ]
+    )
+    line_bot_api.reply_message(
+        event.reply_token,
+        TemplateSendMessage(alt_text=keyword + 'を変更しますか？', template=msg_template)
+    )
 
 
 @handler.add(PostbackEvent)
 def on_postback(event):
     if event.postback.data == 'email':
-        msg_template = ButtonsTemplate(
-            text='メールアドレスを変更しますか？',
-            actions=[
-                MessageAction(label='はい', text='メールアドレスを変更する'),
-                MessageAction(label='いいえ', text='変更しない')
-            ]
-        )
-        line_bot_api.reply_message(
-            event.reply_token,
-            TemplateSendMessage(alt_text='メールアドレスを変更しますか？', template=msg_template)
-        )
+        generateMsgTemplate(event, 'メールアドレス')
     elif event.postback.data == 'password':
-        msg_template = ButtonsTemplate(
-            text='パスワードを変更しますか？',
-            actions=[
-                MessageAction(label='はい', text='パスワードを変更する'),
-                MessageAction(label='いいえ', text='変更しない')
-            ]
-        )
-        line_bot_api.reply_message(
-            event.reply_token,
-            TemplateSendMessage(alt_text='パスワードを変更しますか？', template=msg_template)
-        )
+        generateMsgTemplate(event, 'パスワード')
     elif event.postback.data == 'payment_method':
-        msg_template = ButtonsTemplate(
-            text='決済手段を変更しますか？',
-            actions=[
-                MessageAction(label='はい', text='決済手段を変更する'),
-                MessageAction(label='いいえ', text='変更しない')
-            ]
-        )
-        line_bot_api.reply_message(
-            event.reply_token,
-            TemplateSendMessage(alt_text='決済手段を変更しますか？', template=msg_template)
-        )
+        generateMsgTemplate(event, '決済手段')
     elif event.postback.data == 'address':
-        msg_template = ButtonsTemplate(
-            text='住所を変更しますか？',
-            actions=[
-                MessageAction(label='はい', text='住所を変更する'),
-                MessageAction(label='いいえ', text='変更しない')
-            ]
-        )
-        line_bot_api.reply_message(
-            event.reply_token,
-            TemplateSendMessage(alt_text='住所を変更しますか？', template=msg_template)
-        )
+        generateMsgTemplate(event, '住所')
 
 
 if __name__ == "__main__":
