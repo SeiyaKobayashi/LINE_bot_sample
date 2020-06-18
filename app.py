@@ -55,17 +55,52 @@ def message_init(event):
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp // 1000).time().hour)
 
     if user:     # If user account already exists (i.e., past user)
-        line_bot_api.reply_message(
-            event.reply_token,
-            [
-                TextSendMessage(
-                    text=user.name + 'さん、' + greeting + '\n友達再追加ありがとうございます！'
-                ),
-                TextSendMessage(
-                    text='基本操作は画面下部のメニューから行なってください。'
-                )
-            ]
-        )
+        if not user.name:
+            line_bot_api.reply_message(
+                event.reply_token,
+                [
+                    TextSendMessage(
+                        text=greeting + '友達再追加ありがとうございます！'
+                    ),
+                    TextSendMessage(
+                        text='このボットは、あなたのことをなんとお呼びすればいいですか？お名前またはニックネームを教えてください。',
+                        quickReply={
+                            'items': [
+                                {
+                                    "type": "action",
+                                    "action": {
+                                      "type": "message",
+                                      "label": line_bot_api.get_profile(event.source.user_id).display_name + "に設定する",
+                                      "text": line_bot_api.get_profile(event.source.user_id).display_name
+                                    }
+                                }
+                            ]
+                        }
+                    )
+                ]
+            )
+        elif not user.email:
+            line_bot_api.reply_message(
+                event.reply_token,
+                [
+                    TextSendMessage(
+                        text=user.name + 'さん、' + greeting + '\n友達再追加ありがとうございます！'
+                    ),
+                    TextSendMessage(
+                        text='まだメールアドレスが登録されていないようです。頻繁に使用するメールアドレスを入力してください。'
+                    )
+                ]
+            )
+        else:
+            line_bot_api.reply_message(
+                event.reply_token,
+                [
+                    TextSendMessage(
+                        text=user.name + 'さん、' + greeting + '\n友達再追加ありがとうございます！'
+                    ),
+                    TextSendMessage(text='基本操作は画面下のメニューから行なってください。')
+                ]
+            )
     else:     # If new user
         db.session.add(User(line_id=line_bot_api.get_profile(event.source.user_id).user_id))
         db.session.commit()
@@ -77,7 +112,19 @@ def message_init(event):
                     text=greeting + '友達追加ありがとうございます！'
                 ),
                 TextSendMessage(
-                    text='このbotは、あなたのことをなんとお呼びすればよいですか？お名前またはニックネームを教えてください。'
+                    text='このボットは、あなたのことをなんとお呼びすればいいですか？お名前またはニックネームを教えてください。',
+                    quickReply={
+                        'items': [
+                            {
+                                "type": "action",
+                                "action": {
+                                  "type": "message",
+                                  "label": line_bot_api.get_profile(event.source.user_id).display_name + "に設定する",
+                                  "text": line_bot_api.get_profile(event.source.user_id).display_name
+                                }
+                            }
+                        ]
+                    }
                 )
             ]
         )
@@ -89,55 +136,45 @@ def message_text(event):
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp // 1000).time().hour)
 
-    if not user.name or not user.email or not user.password:     # If initial setup is not done
-        if user.name == None:     # Ask name
-            user.name = event.message.text
-            db.session.commit()
+    if not user.name:
+        user.name = event.message.text
+        db.session.commit()
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            [
+                TextSendMessage(text=user.name + 'さん、はじめまして！'),
+                TextSendMessage(text='続いて、頻繁に使用するメールアドレスを教えてください。')
+            ]
+        )
+    elif not user.email:
+        # WIP: Check if it matches email registered on EC Force
+        if '@' not in event.message.text or len(event.message.text) < 4:
             line_bot_api.reply_message(
                 event.reply_token,
                 [
-                    TextSendMessage(text=user.name + 'さん、' + greeting),
-                    TextSendMessage(text='それでは、アカウントの設定をしていきましょう！よく使用するメールアドレスを入力してください。')
+                    TextSendMessage(text='有効なメールアドレスではないようです。もう一度入力してください。'),
                 ]
             )
-        elif user.email == None:     # Ask email
+        else:
             user.email = event.message.text
-            try:
-                db.session.commit()
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    [
-                        TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。'),
-                        TextSendMessage(text='続いて、アカウントのパスワードを設定してください。')
-                    ]
-                )
-            except:
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(text='このメールアドレスはすでに使用されているようです。別のメールアドレスを入力してください。')
-                )
-        elif user.password == None:     # Ask to set password
-            user.password = event.message.text
             db.session.commit()
+
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(
-                    text='パスワードを設定しました。これで初期設定は完了です！\n\n今後の基本操作は画面下部のメニューから行なってください。'
-                )
+                [
+                    TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。'),
+                    TextSendMessage(text='初期設定は以上となります。今後の基本操作は画面下のメニューから行なってください。')
+                ]
             )
-
-    else:     # If initial setup is done
-        if '設定' in event.message.text:
-            msg_template = ButtonsTemplate(
+    else:
+        if event.message.text == '設定変更':
+            setting_template = ButtonsTemplate(
                 text='変更したい項目をタップしてください',
                 actions=[
                     PostbackTemplateAction(
                         label='メールアドレス',
                         data='email'
-                    ),
-                    PostbackTemplateAction(
-                        label='パスワード',
-                        data='password'
                     ),
                     PostbackTemplateAction(
                         label='決済手段',
@@ -151,28 +188,21 @@ def message_text(event):
             )
             line_bot_api.reply_message(
                 event.reply_token,
-                TemplateSendMessage(alt_text='settings template', template=msg_template)
+                TemplateSendMessage(alt_text='設定変更', template=setting_template)
             )
-        elif '登録情報' in event.message.text:
+        elif event.message.text == '登録情報':
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text=user.name+'さん(LINE ID: '+user.line_id+')の登録情報は以下の通りです。\n\nEmail: '+user.email+'\nパスワード: '+user.password+'\n決済方法: '+(user.payment if user.payment != None else '設定されていません')+'\n住所: '+(user.address if user.address != None else '設定されていません')
+                    text=user.name+'さんの登録情報は以下の通りです。\n\nLINE ID: '+user.line_id+'\nEmail: '+user.email+'\n決済手段: '+(user.payment if user.payment else '設定されていません')+'\n住所: '+(user.address if user.address else '設定されていません')
                 )
             )
-        elif '使い方' in event.message.text:
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(
-                    text='操作方法は以下をご確認ください。\n1.登録情報の確認:「登録情報」と入力\n2. 各種設定の変更:「設定」と入力\n3. 使い方の確認:「使い方」と入力\n4. フィードバック:「FB」と入力'
-                )
-            )
-        elif 'FB' in event.message.text:
+        elif event.message.text == 'フィードバック':
             line_bot_api.reply_message(
                 event.reply_token,
                 [
                     TextSendMessage(
-                        text='以下のリンクからフィードバックを入力してください。'
+                        text='以下のリンクより、製品・サービスに関するフィードバックの入力をお願い致します。'
                     ),
                     TextSendMessage(
                         text='https://liff.line.me/1654318751-43AoOjrg/send-fbs'
@@ -180,12 +210,12 @@ def message_text(event):
                 ]
             )
         # WIP: no need of templates
-        elif (event.message.text == 'メールアドレスを変更する') or (event.message.text == 'パスワードを変更する') or (event.message.text == '決済手段を変更する') or (event.message.text == '住所を変更する'):
+        elif (event.message.text == 'メールアドレスを変更する') or (event.message.text == '決済手段を変更する') or (event.message.text == '住所を変更する'):
             line_bot_api.reply_message(
                 event.reply_token,
                 [
                     TextSendMessage(
-                        text='以下のリンクから各種設定を行なってください。'
+                        text='以下のリンクより、各種設定を行なってください。'
                     ),
                     TextSendMessage(
                         text='https://liff.line.me/1654318751-43AoOjrg'
@@ -193,7 +223,10 @@ def message_text(event):
                 ]
             )
         elif event.message.text == '変更しない':
-            pass
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text='変更を取りやめました。')
+            )
         else:
             line_bot_api.reply_message(
                 event.reply_token,
@@ -219,8 +252,6 @@ def generateMsgTemplate(event, keyword):
 def on_postback(event):
     if event.postback.data == 'email':
         generateMsgTemplate(event, 'メールアドレス')
-    elif event.postback.data == 'password':
-        generateMsgTemplate(event, 'パスワード')
     elif event.postback.data == 'payment_method':
         generateMsgTemplate(event, '決済手段')
     elif event.postback.data == 'address':
