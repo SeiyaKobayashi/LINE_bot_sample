@@ -6,9 +6,10 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
-    FollowEvent, MessageEvent, PostbackEvent, QuickReply, QuickReplyButton,
+    FollowEvent, MessageEvent, PostbackEvent,
     TextMessage, TextSendMessage, TemplateSendMessage,
-    ButtonsTemplate, MessageAction, PostbackTemplateAction
+    MessageAction, PostbackAction, PostbackTemplateAction,
+    ButtonsTemplate, QuickReply, QuickReplyButton,
 )
 from __init__ import create_app
 from models import db, User
@@ -124,6 +125,25 @@ def message_init(event):
         )
 
 
+def setQuickReply(q_num):
+    options = {
+        1: [('とても残念に思う', 1), ('どちらかといえば残念に思う', 2), ('どちらでもない', 3), ('どちらかといえば残念に思わない', 4), ('全く残念に思わない', 5)],
+        2: [('サプリの効果が感じられた', 1), ('1日分のサプリが小分けになっている', 2), ('デザインが好き', 3), ('サプリ診断が役立った', 4), ('LINE Botが便利', 5), ('特になし', 6)],
+        3: [('価格を下げる', 1), ('サプリの配合を変える', 2), ('購入後のサポート体制を整える', 3), ('特になし', 4)]
+    }
+    items = [
+        QuickReplyButton(
+            action=PostbackAction(
+                label=option[0],
+                text=option[0],
+                data='qid=1&ans='+str(option[1])
+            )
+        ) for option in options[q_num]
+    ]
+
+    return items
+
+
 @handler.add(MessageEvent, message=TextMessage)
 def message_text(event):
 
@@ -192,25 +212,13 @@ def message_text(event):
                 )
             )
         elif event.message.text == 'フィードバック':
-            options_q1 = [
-                ('とても残念に思う', 1), ('どちらかといえば残念に思う', 2), ('どちらでもない', 3), ('どちらかといえば残念に思わない', 4), ('全く残念に思わない', 5)
-            ]
-            items_q1 = [
-                QuickReplyButton(
-                    action=MessageAction(
-                        label=option[0],
-                        text=option[0],
-                        data='qid=1&ans='+str(option[1])
-                    )
-                ) for option in options_q1
-            ]
             line_bot_api.reply_message(
                 event.reply_token,
                 [
                     TextSendMessage(text='製品・サービスに関するフィードバックの入力をお願い致します。'),
                     TextSendMessage(
                         text='【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
-                        quick_reply=QuickReply(items=items_q1)
+                        quick_reply=QuickReply(items=setQuickReply(1))
                     )
                 ]
             )
@@ -263,9 +271,22 @@ def on_postback(event):
         generateMsgTemplate(event, '住所')
     else:
         if '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=1':
+            print('Q1:', event.postback.text)
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(text=event.postback.data.split('&')[1])
+                TextSendMessage(
+                    text='【質問②】\n\nこの製品を使ってみて良かった点を教えてください。',
+                    quick_reply=QuickReply(items=setQuickReply(2))
+                )
+            )
+        elif '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=2':
+            print('Q2:', event.postback.text)
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='【質問③】\n\nこの製品をより良くするためには何が必要だと感じますか?',
+                    quick_reply=QuickReply(items=setQuickReply(3))
+                )
             )
 
 
