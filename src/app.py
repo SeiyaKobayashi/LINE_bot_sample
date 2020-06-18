@@ -197,22 +197,21 @@ def message_text(event):
             user.email = event.message.text
             db.session.commit()
 
+            items = [
+                QuickReplyButton(action=PostbackAction(label="オンにする", text="オンにする", data='enabled_weather=1')),
+                QuickReplyButton(action=PostbackAction(label="オフにする", text="オフにする", data='enabled_weather=0'))
+            ]
+
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。')
+                [
+                    TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。'),
+                    TextSendMessage(
+                        text='このボットは、日々の天気予報をお知らせすることもできます。天気予報機能をオンにしますか?',
+                        quick_reply=QuickReply(items=items)
+                    )
+                ]
             )
-    elif not user.enabled_weather:
-        items = [
-            QuickReplyButton(action=PostbackAction(label="オンにする", text="オンにする", data='enabled_weather=1')),
-            QuickReplyButton(action=PostbackAction(label="オフにする", text="オフにする", data='enabled_weather=0'))
-        ]
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(
-                text='このボットは、日々の天気予報をお知らせすることもできます。天気予報機能をオンにしますか?',
-                quick_reply=QuickReply(items=items)
-            )
-        )
     else:
         if event.message.text == '設定変更':
             setting_template = ButtonsTemplate(
@@ -267,7 +266,7 @@ def message_text(event):
                 event.reply_token,
                 TextSendMessage(text='天気予報機能は現在開発中です...')
             )
-        elif 'postback' in event:
+        elif hasattr(event, 'postback'):
             pass
         else:
             line_bot_api.reply_message(
