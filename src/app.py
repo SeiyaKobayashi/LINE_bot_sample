@@ -138,7 +138,7 @@ def message_init(event):
         )
 
 
-def sendQuickReply(q_num):
+def sendQuickReply(event, q_num):
     items = [
         QuickReplyButton(
             action=PostbackAction(
@@ -213,21 +213,7 @@ def message_text(event):
                 ]
             )
     else:
-        if event.message.text == '設定変更':
-            setting_template = ButtonsTemplate(
-                text='変更したい項目をタップしてください',
-                actions=[
-                    PostbackTemplateAction(
-                        label='メールアドレス',
-                        data='email'
-                    )
-                ]
-            )
-            line_bot_api.reply_message(
-                event.reply_token,
-                TemplateSendMessage(alt_text='設定変更', template=setting_template)
-            )
-        elif event.message.text == '登録情報':
+        if event.message.text == '登録情報':
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
@@ -241,8 +227,22 @@ def message_text(event):
                         '招待人数: '+str(user.num_of_referrals)
                 )
             )
+        elif event.message.text == '設定変更':
+            setting_template = ButtonsTemplate(
+                text='変更したい項目をタップしてください',
+                actions=[
+                    PostbackTemplateAction(
+                        label='メールアドレス',
+                        data='email'
+                    )
+                ]
+            )
+            line_bot_api.reply_message(
+                event.reply_token,
+                TemplateSendMessage(alt_text='設定変更', template=setting_template)
+            )
         elif event.message.text == 'フィードバック':
-            sendQuickReply(1)
+            sendQuickReply(event, 1)
         # WIP: no need of templates
         elif (event.message.text == 'メールアドレスを変更する'):
             line_bot_api.reply_message(
@@ -338,9 +338,9 @@ def on_postback(event):
             )
     else:
         if '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=1':
-            sendQuickReply(2)
+            sendQuickReply(event, 2)
         elif '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=2':
-            sendQuickReply(3)
+            sendQuickReply(event, 3)
 
 
 if __name__ == "__main__":
