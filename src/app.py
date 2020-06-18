@@ -213,6 +213,7 @@ def message_text(event):
                 ]
             )
     else:
+        print('event:', event)
         if event.message.text == '登録情報':
             line_bot_api.reply_message(
                 event.reply_token,
@@ -266,7 +267,7 @@ def message_text(event):
                 event.reply_token,
                 TextSendMessage(text='天気予報機能は現在開発中です...')
             )
-        elif hasattr(event, 'postback'):
+        elif 'postback' in event:
             pass
         else:
             line_bot_api.reply_message(
