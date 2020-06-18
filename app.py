@@ -25,6 +25,12 @@ line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
 
 # WIP: separate this data as a different file (e.g., JSON)
+FB_QUESTIONS_NUM = 3
+fb_questions = {
+    1: '【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
+    2: '【質問②】\n\nこの製品を使ってみて良かった点を教えてください。',
+    3: '【質問③】\n\nこの製品をより良くするためには何が必要だと感じますか?'
+}
 fb_options = {
     1: [('とても残念に思う', 1), ('どちらかといえば残念に思う', 2), ('どちらでもない', 3), ('どちらかといえば残念に思わない', 4), ('全く残念に思わない', 5)],
     2: [('サプリの効果が感じられた', 1), ('1日分のサプリが小分けになっている', 2), ('デザインが好き', 3), ('サプリ診断が役立った', 4), ('LINE Botが便利', 5), ('特になし', 6)],
@@ -132,18 +138,35 @@ def message_init(event):
         )
 
 
-def setQuickReply(q_num):
+def sendQuickReply(q_num):
     items = [
         QuickReplyButton(
             action=PostbackAction(
                 label=option[0],
                 text=option[0],
-                data='qid=1&ans='+str(option[1])
+                data='qid='+str(q_num)'&ans='+str(option[1])
             )
         ) for option in fb_options[q_num]
     ]
-
-    return items
+    if q_num == FB_QUESTIONS_NUM:
+        line_bot_api.reply_message(
+            event.reply_token,
+            [
+                TextSendMessage(
+                    text=fb_questions[q_num],
+                    quick_reply=QuickReply(items=items)
+                ),
+                TextSendMessage(text='ご回答ありがとうございます！フィードバックは、今後のサービス改善に役立たせて頂きます。')
+            ]
+        )
+    else:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text=fb_questions[q_num],
+                quick_reply=QuickReply(items=items)
+            )
+        )
 
 
 @handler.add(MessageEvent, message=TextMessage)
@@ -168,9 +191,7 @@ def message_text(event):
         if '@' not in event.message.text or len(event.message.text) < 4:
             line_bot_api.reply_message(
                 event.reply_token,
-                [
-                    TextSendMessage(text='有効なメールアドレスではないようです。もう一度入力してください。'),
-                ]
+                TextSendMessage(text='有効なメールアドレスではないようです。もう一度入力してください。')
             )
         else:
             user.email = event.message.text
@@ -214,16 +235,7 @@ def message_text(event):
                 )
             )
         elif event.message.text == 'フィードバック':
-            line_bot_api.reply_message(
-                event.reply_token,
-                [
-                    TextSendMessage(text='製品・サービスに関するフィードバックの入力をお願い致します。'),
-                    TextSendMessage(
-                        text='【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
-                        quick_reply=QuickReply(items=setQuickReply(1))
-                    )
-                ]
-            )
+            sendQuickReply(1)
         # WIP: no need of templates
         elif (event.message.text == 'メールアドレスを変更する') or (event.message.text == '決済手段を変更する') or (event.message.text == '住所を変更する'):
             line_bot_api.reply_message(
@@ -275,21 +287,9 @@ def on_postback(event):
         generateMsgTemplate(event, '住所')
     else:
         if '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=1':
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(
-                    text='【質問②】\n\nこの製品を使ってみて良かった点を教えてください。',
-                    quick_reply=QuickReply(items=setQuickReply(2))
-                )
-            )
+            sendQuickReply(2)
         elif '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=2':
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(
-                    text='【質問③】\n\nこの製品をより良くするためには何が必要だと感じますか?',
-                    quick_reply=QuickReply(items=setQuickReply(3))
-                )
-            )
+            sendQuickReply(3)
 
 
 if __name__ == "__main__":
