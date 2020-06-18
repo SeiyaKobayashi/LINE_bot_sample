@@ -24,6 +24,13 @@ channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
 line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
 
+# WIP: separate this data as a different file (e.g., JSON)
+fb_options = {
+    1: [('とても残念に思う', 1), ('どちらかといえば残念に思う', 2), ('どちらでもない', 3), ('どちらかといえば残念に思わない', 4), ('全く残念に思わない', 5)],
+    2: [('サプリの効果が感じられた', 1), ('1日分のサプリが小分けになっている', 2), ('デザインが好き', 3), ('サプリ診断が役立った', 4), ('LINE Botが便利', 5), ('特になし', 6)],
+    3: [('価格を下げる', 1), ('サプリの配合を変える', 2), ('購入後のサポート体制を整える', 3), ('特になし', 4)]
+}
+
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -126,11 +133,6 @@ def message_init(event):
 
 
 def setQuickReply(q_num):
-    options = {
-        1: [('とても残念に思う', 1), ('どちらかといえば残念に思う', 2), ('どちらでもない', 3), ('どちらかといえば残念に思わない', 4), ('全く残念に思わない', 5)],
-        2: [('サプリの効果が感じられた', 1), ('1日分のサプリが小分けになっている', 2), ('デザインが好き', 3), ('サプリ診断が役立った', 4), ('LINE Botが便利', 5), ('特になし', 6)],
-        3: [('価格を下げる', 1), ('サプリの配合を変える', 2), ('購入後のサポート体制を整える', 3), ('特になし', 4)]
-    }
     items = [
         QuickReplyButton(
             action=PostbackAction(
@@ -138,7 +140,7 @@ def setQuickReply(q_num):
                 text=option[0],
                 data='qid=1&ans='+str(option[1])
             )
-        ) for option in options[q_num]
+        ) for option in fb_options[q_num]
     ]
 
     return items
@@ -240,6 +242,8 @@ def message_text(event):
                 event.reply_token,
                 TextSendMessage(text='変更を取りやめました。')
             )
+        elif 'postback' in event:
+            pass
         else:
             line_bot_api.reply_message(
                 event.reply_token,
