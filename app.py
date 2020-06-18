@@ -144,7 +144,7 @@ def sendQuickReply(q_num):
             action=PostbackAction(
                 label=option[0],
                 text=option[0],
-                data='qid='+str(q_num)'&ans='+str(option[1])
+                data='qid='+str(q_num)+'&ans='+str(option[1])
             )
         ) for option in fb_options[q_num]
     ]
