@@ -271,7 +271,6 @@ def on_postback(event):
         generateMsgTemplate(event, '住所')
     else:
         if '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=1':
-            print('Q1:', event.postback.text)
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
@@ -280,7 +279,6 @@ def on_postback(event):
                 )
             )
         elif '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=2':
-            print('Q2:', event.postback.text)
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
