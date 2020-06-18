@@ -62,7 +62,8 @@ def message_init(event):
                         label=line_bot_api.get_profile(event.source.user_id).display_name + "に設定する",
                         text=line_bot_api.get_profile(event.source.user_id).display_name
                     )
-                )]
+                )
+            ]
             line_bot_api.reply_message(
                 event.reply_token,
                 [
@@ -71,7 +72,7 @@ def message_init(event):
                     ),
                     TextSendMessage(
                         text='このボットは、あなたのことをなんとお呼びすればいいですか？お名前またはニックネームを教えてください。',
-                        quickReply=QuickReply(items=items)
+                        quick_reply=QuickReply(items=items)
                     )
                 ]
             )
@@ -107,7 +108,8 @@ def message_init(event):
                     label=line_bot_api.get_profile(event.source.user_id).display_name + "に設定する",
                     text=line_bot_api.get_profile(event.source.user_id).display_name
                 )
-            )]
+            )
+        ]
         line_bot_api.reply_message(
             event.reply_token,
             [
@@ -116,7 +118,7 @@ def message_init(event):
                 ),
                 TextSendMessage(
                     text='このボットは、あなたのことをなんとお呼びすればいいですか？お名前またはニックネームを教えてください。',
-                    quickReply=QuickReply(items=items)
+                    quick_reply=QuickReply(items=items)
                 )
             ]
         )
@@ -190,61 +192,25 @@ def message_text(event):
                 )
             )
         elif event.message.text == 'フィードバック':
+            options_q1 = [
+                ('とても残念に思う', 1), ('どちらかといえば残念に思う', 2), ('どちらでもない', 3), ('どちらかといえば残念に思わない', 4), ('全く残念に思わない', 5)
+            ]
+            items_q1 = [
+                QuickReplyButton(
+                    action=MessageAction(
+                        label=option[0],
+                        text=option[0],
+                        data='qid=1&ans='+str(option[1])
+                    )
+                ) for option in options_q1
+            ]
             line_bot_api.reply_message(
                 event.reply_token,
                 [
                     TextSendMessage(text='製品・サービスに関するフィードバックの入力をお願い致します。'),
                     TextSendMessage(
                         text='【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
-                        quickReply={
-                            'items': [
-                                {
-                                    "type": "action",
-                                    "action": {
-                                      "type": "postback",
-                                      "label": "とても残念に思う",
-                                      "text": "とても残念に思う",
-                                      "data": "qid=1&ans=1"
-                                    }
-                                },
-                                {
-                                    "type": "action",
-                                    "action": {
-                                      "type": "postback",
-                                      "label": "どちらかといえば残念に思う",
-                                      "text": "どちらかといえば残念に思う",
-                                      "data": "qid=1&ans=2"
-                                    }
-                                },
-                                {
-                                    "type": "action",
-                                    "action": {
-                                      "type": "postback",
-                                      "label": "どちらでもない",
-                                      "text": "どちらでもない",
-                                      "data": "qid=1&ans=3"
-                                    }
-                                },
-                                {
-                                    "type": "action",
-                                    "action": {
-                                      "type": "postback",
-                                      "label": "どちらかといえば残念に思わない",
-                                      "text": "どちらかといえば残念に思わない",
-                                      "data": "qid=1&ans=4"
-                                    }
-                                },
-                                {
-                                    "type": "action",
-                                    "action": {
-                                      "type": "postback",
-                                      "label": "全く残念に思わない",
-                                      "text": "全く残念に思わない",
-                                      "data": "qid=1&ans=5"
-                                    }
-                                }
-                            ]
-                        }
+                        quick_reply=QuickReply(items=items_q1)
                     )
                 ]
             )
