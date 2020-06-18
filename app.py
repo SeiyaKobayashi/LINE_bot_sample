@@ -201,11 +201,58 @@ def message_text(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 [
+                    TextSendMessage(text='製品・サービスに関するフィードバックの入力をお願い致します。'),
                     TextSendMessage(
-                        text='以下のリンクより、製品・サービスに関するフィードバックの入力をお願い致します。'
-                    ),
-                    TextSendMessage(
-                        text='https://liff.line.me/1654318751-43AoOjrg/send-fbs'
+                        text='【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
+                        quickReply={
+                            'items': [
+                                {
+                                    "type": "action",
+                                    "action": {
+                                      "type": "postback",
+                                      "label": "とても残念に思う",
+                                      "text": "とても残念に思う",
+                                      "data": "qid=1&ans=1"
+                                    }
+                                },
+                                {
+                                    "type": "action",
+                                    "action": {
+                                      "type": "postback",
+                                      "label": "どちらかといえば残念に思う",
+                                      "text": "どちらかといえば残念に思う",
+                                      "data": "qid=1&ans=2"
+                                    }
+                                },
+                                {
+                                    "type": "action",
+                                    "action": {
+                                      "type": "postback",
+                                      "label": "どちらでもない",
+                                      "text": "どちらでもない",
+                                      "data": "qid=1&ans=3"
+                                    }
+                                },
+                                {
+                                    "type": "action",
+                                    "action": {
+                                      "type": "postback",
+                                      "label": "どちらかといえば残念に思わない",
+                                      "text": "どちらかといえば残念に思わない",
+                                      "data": "qid=1&ans=4"
+                                    }
+                                },
+                                {
+                                    "type": "action",
+                                    "action": {
+                                      "type": "postback",
+                                      "label": "全く残念に思わない",
+                                      "text": "全く残念に思わない",
+                                      "data": "qid=1&ans=5"
+                                    }
+                                }
+                            ]
+                        }
                     )
                 ]
             )
@@ -256,6 +303,12 @@ def on_postback(event):
         generateMsgTemplate(event, '決済手段')
     elif event.postback.data == 'address':
         generateMsgTemplate(event, '住所')
+    else:
+        if '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=1':
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=event.postback.data.split('&')[1])
+            )
 
 
 if __name__ == "__main__":
