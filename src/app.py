@@ -11,8 +11,8 @@ from linebot.models import (
     MessageAction, PostbackAction, PostbackTemplateAction, LocationAction,
     ButtonsTemplate, QuickReply, QuickReplyButton,
 )
-from __init__ import create_app
-from models import db, User
+from src import create_app
+from src.models import db, User
 
 app = create_app()
 
