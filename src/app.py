@@ -7,8 +7,8 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     FollowEvent, MessageEvent, PostbackEvent,
-    TextMessage, TextSendMessage, TemplateSendMessage,
-    MessageAction, PostbackAction, PostbackTemplateAction,
+    TextMessage, LocationMessage, TextSendMessage, TemplateSendMessage,
+    MessageAction, PostbackAction, PostbackTemplateAction, LocationAction,
     ButtonsTemplate, QuickReply, QuickReplyButton,
 )
 from __init__ import create_app
@@ -113,7 +113,7 @@ def message_init(event):
                 ]
             )
     else:     # If new user
-        db.session.add(User(line_id=line_bot_api.get_profile(event.source.user_id).user_id))
+        db.session.add(User(line_id=line_bot_api.get_profile(event.source.user_id).user_id, created_at=datetime.now().timestamp()))
         db.session.commit()
 
         items = [
@@ -199,11 +199,20 @@ def message_text(event):
 
             line_bot_api.reply_message(
                 event.reply_token,
-                [
-                    TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。'),
-                    TextSendMessage(text='初期設定は以上となります。今後の基本操作は画面下のメニューから行なってください。')
-                ]
+                TextSendMessage(text='メールアドレスを ' + user.email + ' に設定しました。')
             )
+    elif not user.enabled_weather:
+        items = [
+            QuickReplyButton(action=PostbackAction(label="オンにする", text="オンにする", data='enabled_weather=1')),
+            QuickReplyButton(action=PostbackAction(label="オフにする", text="オフにする", data='enabled_weather=0'))
+        ]
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='このボットは、日々の天気予報をお知らせすることもできます。天気予報機能をオンにしますか?',
+                quick_reply=QuickReply(items=items)
+            )
+        )
     else:
         if event.message.text == '設定変更':
             setting_template = ButtonsTemplate(
@@ -212,14 +221,6 @@ def message_text(event):
                     PostbackTemplateAction(
                         label='メールアドレス',
                         data='email'
-                    ),
-                    PostbackTemplateAction(
-                        label='決済手段',
-                        data='payment_method'
-                    ),
-                    PostbackTemplateAction(
-                        label='住所',
-                        data='address'
                     )
                 ]
             )
@@ -231,13 +232,20 @@ def message_text(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text=user.name+'さんの登録情報は以下の通りです。\n\nLINE ID: '+user.line_id+'\nEmail: '+user.email+'\n決済手段: '+(user.payment if user.payment else '設定されていません')+'\n住所: '+(user.address if user.address else '設定されていません')
+                    text=user.name+'さんの登録情報は以下の通りです。\n\n' \
+                        'LINE ID: '+user.line_id+'\n' \
+                        'Email: '+user.email+'\n' \
+                        '定期購入: '+('定期購入中' if user.is_subscribing else '設定されていません')+'\n' \
+                        'サプリ摂取時刻: '+(user.default_time if user.default_time else '設定されていません')+'\n' \
+                        '天気予報: '+('オン' if user.enabled_weather else 'オフ')+'\n' \
+                        'Twitter連携: '+('オン' if user.enabled_twitter else 'オフ')+'\n' \
+                        '招待人数: '+str(user.num_of_referrals)
                 )
             )
         elif event.message.text == 'フィードバック':
             sendQuickReply(1)
         # WIP: no need of templates
-        elif (event.message.text == 'メールアドレスを変更する') or (event.message.text == '決済手段を変更する') or (event.message.text == '住所を変更する'):
+        elif (event.message.text == 'メールアドレスを変更する'):
             line_bot_api.reply_message(
                 event.reply_token,
                 [
@@ -254,6 +262,11 @@ def message_text(event):
                 event.reply_token,
                 TextSendMessage(text='変更を取りやめました。')
             )
+        elif event.message.text == '天気' or event.message.text == '天気予報':
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text='天気予報機能は現在開発中です...')
+            )
         elif 'postback' in event:
             pass
         else:
@@ -261,6 +274,21 @@ def message_text(event):
                 event.reply_token,
                 TextSendMessage(text='会話機能は現在開発中です...')
             )
+
+
+@handler.add(MessageEvent, message=LocationMessage)
+def message_location(event):
+    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    user.address = event.message.address
+    db.session.commit()
+
+    line_bot_api.reply_message(
+        event.reply_token,
+        [
+            TextSendMessage(text='現在地を' + user.address + 'に設定しました。今後は「天気」と送ると現在地の天気予報が返ってくるようになります。'),
+            TextSendMessage(text='初期設定は以上となります。今後の基本操作・設定は画面下のメニューから行なってください。')
+        ]
+    )
 
 
 def generateMsgTemplate(event, keyword):
@@ -279,12 +307,36 @@ def generateMsgTemplate(event, keyword):
 
 @handler.add(PostbackEvent)
 def on_postback(event):
+    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+
     if event.postback.data == 'email':
         generateMsgTemplate(event, 'メールアドレス')
-    elif event.postback.data == 'payment_method':
-        generateMsgTemplate(event, '決済手段')
-    elif event.postback.data == 'address':
-        generateMsgTemplate(event, '住所')
+    elif 'enabled_weather' in event.postback.data:
+        if event.postback.data.split('=')[1] == '1':
+            user.enabled_weather = True
+            db.session.commit()
+
+            items = [
+                QuickReplyButton(action=LocationAction(label="位置情報を送る"))
+            ]
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='天気予報機能をオンにしました。正確な天気予報のため、下記ボタンより位置情報を送ってください。',
+                    quick_reply=QuickReply(items=items)
+                )
+            )
+        elif event.postback.data.split('=')[1] == '0':
+            user.enabled_weather = False
+            db.session.commit()
+
+            line_bot_api.reply_message(
+                event.reply_token,
+                [
+                    TextSendMessage(text='天気予報機能をオフにしました。メニューからはいつでも設定の変更ができます。'),
+                    TextSendMessage(text='初期設定は以上となります。今後の基本操作・設定は画面下のメニューから行なってください。')
+                ]
+            )
     else:
         if '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=1':
             sendQuickReply(2)

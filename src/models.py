@@ -16,6 +16,7 @@ class User(db.Model):
     coupon_issued    = db.Column(db.Boolean, nullable=False)
     name             = db.Column(db.String(255))
     email            = db.Column(db.String(255), unique=True)
+    address          = db.Column(db.String(255))
     is_subscribing   = db.Column(db.Boolean)
     subscribed       = db.Column(db.Boolean)
     churned_at       = db.Column(db.Float)
@@ -23,15 +24,16 @@ class User(db.Model):
     default_time     = db.Column(db.String(255))
     num_of_referrals = db.Column(db.Integer)
     num_of_feedbacks = db.Column(db.Integer)
-    enabled_weather  = db.Column(db.Boolean, nullable=False)
-    enabled_twitter  = db.Column(db.Boolean, nullable=False)
+    enabled_weather  = db.Column(db.Boolean)
+    enabled_twitter  = db.Column(db.Boolean)
 
-    def __init__(self, line_id, created_at, coupon_issued=False, name=None, email=None, is_subscribing=None, subscribed=None, churned_at=None, days_passed=None, default_time=None, num_of_referrals=0, num_of_feedbacks=0, enabled_weather=True, enabled_twitter=False):
+    def __init__(self, line_id, created_at, coupon_issued=False, name=None, email=None, address=None, is_subscribing=None, subscribed=None, churned_at=None, days_passed=None, default_time=None, num_of_referrals=0, num_of_feedbacks=0, enabled_weather=None, enabled_twitter=None):
         self.line_id          = line_id
         self.created_at       = created_at
         self.coupon_issued    = coupon_issued
         self.name             = name
         self.email            = email
+        self.address          = address
         self.is_subscribing   = is_subscribing
         self.subscribed       = subscribed
         self.churned_at       = churned_at
