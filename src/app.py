@@ -36,6 +36,11 @@ fb_options = {
     2: [('サプリの効果が感じられた', 1), ('1日分のサプリが小分けになっている', 2), ('デザインが好き', 3), ('サプリ診断が役立った', 4), ('LINE Botが便利', 5), ('特になし', 6)],
     3: [('価格を下げる', 1), ('サプリの配合を変える', 2), ('購入後のサポート体制を整える', 3), ('特になし', 4)]
 }
+MSGS_IGNORED = [
+    'とても残念に思う', 'どちらかといえば残念に思う', 'どちらでもない', 'どちらかといえば残念に思わない', '全く残念に思わない',
+    'サプリの効果が感じられた', '1日分のサプリが小分けになっている', 'デザインが好き', 'サプリ診断が役立った', 'LINE Botが便利', '特になし',
+    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える'
+]
 
 
 @app.route("/callback", methods=['POST'])
@@ -267,7 +272,7 @@ def message_text(event):
                 event.reply_token,
                 TextSendMessage(text='天気予報機能は現在開発中です...')
             )
-        elif 'postback' in event:
+        elif event.message.text in MSGS_IGNORED:
             pass
         else:
             line_bot_api.reply_message(
