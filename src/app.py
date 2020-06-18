@@ -25,6 +25,11 @@ line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
 
 # WIP: separate this data as a different file (e.g., JSON)
+MSGS_IGNORED = [
+    'とても残念に思う', 'どちらかといえば残念に思う', 'どちらでもない', 'どちらかといえば残念に思わない', '全く残念に思わない',
+    'サプリの効果が感じられた', '1日分のサプリが小分けになっている', 'デザインが好き', 'サプリ診断が役立った', 'LINE Botが便利', '特になし',
+    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える'
+]
 FB_QUESTIONS_NUM = 3
 fb_questions = {
     1: '【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
@@ -36,11 +41,6 @@ fb_options = {
     2: [('サプリの効果が感じられた', 1), ('1日分のサプリが小分けになっている', 2), ('デザインが好き', 3), ('サプリ診断が役立った', 4), ('LINE Botが便利', 5), ('特になし', 6)],
     3: [('価格を下げる', 1), ('サプリの配合を変える', 2), ('購入後のサポート体制を整える', 3), ('特になし', 4)]
 }
-MSGS_IGNORED = [
-    'とても残念に思う', 'どちらかといえば残念に思う', 'どちらでもない', 'どちらかといえば残念に思わない', '全く残念に思わない',
-    'サプリの効果が感じられた', '1日分のサプリが小分けになっている', 'デザインが好き', 'サプリ診断が役立った', 'LINE Botが便利', '特になし',
-    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える'
-]
 
 
 @app.route("/callback", methods=['POST'])
@@ -153,25 +153,13 @@ def sendQuickReply(event, q_num):
             )
         ) for option in fb_options[q_num]
     ]
-    if q_num == FB_QUESTIONS_NUM:
-        line_bot_api.reply_message(
-            event.reply_token,
-            [
-                TextSendMessage(
-                    text=fb_questions[q_num],
-                    quick_reply=QuickReply(items=items)
-                ),
-                TextSendMessage(text='ご回答ありがとうございます！フィードバックは、今後のサービス改善に役立たせて頂きます。')
-            ]
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(
+            text=fb_questions[q_num],
+            quick_reply=QuickReply(items=items)
         )
-    else:
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(
-                text=fb_questions[q_num],
-                quick_reply=QuickReply(items=items)
-            )
-        )
+    )
 
 
 @handler.add(MessageEvent, message=TextMessage)
@@ -218,7 +206,6 @@ def message_text(event):
                 ]
             )
     else:
-        print('event:', event)
         if event.message.text == '登録情報':
             line_bot_api.reply_message(
                 event.reply_token,
@@ -347,6 +334,11 @@ def on_postback(event):
             sendQuickReply(event, 2)
         elif '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=2':
             sendQuickReply(event, 3)
+        elif '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=3':
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text='ご回答ありがとうございます！フィードバックは、今後のサービス改善に役立たせて頂きます。')
+            )
 
 
 if __name__ == "__main__":
