@@ -6,7 +6,7 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
-    FollowEvent, MessageEvent, PostbackEvent,
+    FollowEvent, MessageEvent, PostbackEvent, QuickReply, QuickReplyButton,
     TextMessage, TextSendMessage, TemplateSendMessage,
     ButtonsTemplate, MessageAction, PostbackTemplateAction
 )
@@ -56,6 +56,13 @@ def message_init(event):
 
     if user:     # If user account already exists (i.e., past user)
         if not user.name:
+            items = [
+                QuickReplyButton(
+                    action=MessageAction(
+                        label=line_bot_api.get_profile(event.source.user_id).display_name + "に設定する",
+                        text=line_bot_api.get_profile(event.source.user_id).display_name
+                    )
+                )]
             line_bot_api.reply_message(
                 event.reply_token,
                 [
@@ -64,18 +71,7 @@ def message_init(event):
                     ),
                     TextSendMessage(
                         text='このボットは、あなたのことをなんとお呼びすればいいですか？お名前またはニックネームを教えてください。',
-                        quickReply={
-                            'items': [
-                                {
-                                    "type": "action",
-                                    "action": {
-                                      "type": "message",
-                                      "label": line_bot_api.get_profile(event.source.user_id).display_name + "に設定する",
-                                      "text": line_bot_api.get_profile(event.source.user_id).display_name
-                                    }
-                                }
-                            ]
-                        }
+                        quickReply=QuickReply(items=items)
                     )
                 ]
             )
@@ -105,6 +101,13 @@ def message_init(event):
         db.session.add(User(line_id=line_bot_api.get_profile(event.source.user_id).user_id))
         db.session.commit()
 
+        items = [
+            QuickReplyButton(
+                action=MessageAction(
+                    label=line_bot_api.get_profile(event.source.user_id).display_name + "に設定する",
+                    text=line_bot_api.get_profile(event.source.user_id).display_name
+                )
+            )]
         line_bot_api.reply_message(
             event.reply_token,
             [
@@ -113,18 +116,7 @@ def message_init(event):
                 ),
                 TextSendMessage(
                     text='このボットは、あなたのことをなんとお呼びすればいいですか？お名前またはニックネームを教えてください。',
-                    quickReply={
-                        'items': [
-                            {
-                                "type": "action",
-                                "action": {
-                                  "type": "message",
-                                  "label": line_bot_api.get_profile(event.source.user_id).display_name + "に設定する",
-                                  "text": line_bot_api.get_profile(event.source.user_id).display_name
-                                }
-                            }
-                        ]
-                    }
+                    quickReply=QuickReply(items=items)
                 )
             ]
         )
