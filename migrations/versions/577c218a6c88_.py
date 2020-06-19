@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 8b40a703d94a
+Revision ID: 577c218a6c88
 Revises: 
-Create Date: 2020-06-19 04:11:51.772162
+Create Date: 2020-06-20 05:48:23.613295
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8b40a703d94a'
+revision = '577c218a6c88'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,14 +21,15 @@ def upgrade():
     op.create_table('User',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('line_id', sa.String(length=255), nullable=False),
-    sa.Column('created_at', sa.Float(), nullable=False),
-    sa.Column('coupon_issued', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('init_coupon', sa.String(length=255), nullable=True),
+    sa.Column('init_coupon_issued_at', sa.DateTime(), nullable=True),
     sa.Column('name', sa.String(length=255), nullable=True),
     sa.Column('email', sa.String(length=255), nullable=True),
-    sa.Column('address', sa.String(length=255), nullable=True),
+    sa.Column('location', sa.String(length=255), nullable=True),
     sa.Column('is_subscribing', sa.Boolean(), nullable=True),
     sa.Column('subscribed', sa.Boolean(), nullable=True),
-    sa.Column('churned_at', sa.Float(), nullable=True),
+    sa.Column('churned_at', sa.DateTime(), nullable=True),
     sa.Column('days_passed', sa.Integer(), nullable=True),
     sa.Column('default_time', sa.String(length=255), nullable=True),
     sa.Column('num_of_referrals', sa.Integer(), nullable=True),
