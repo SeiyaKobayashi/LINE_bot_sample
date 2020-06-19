@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # app.py
 
 import os
@@ -13,6 +14,7 @@ from linebot.models import (
 )
 from src import create_app
 from src.models import db, User
+from src.weather import parse_address, fetch_weather_driver
 
 app = create_app()
 
@@ -28,7 +30,7 @@ handler = WebhookHandler(channel_secret)
 MSGS_IGNORED = [
     'とても残念に思う', 'どちらかといえば残念に思う', 'どちらでもない', 'どちらかといえば残念に思わない', '全く残念に思わない',
     'サプリの効果が感じられた', '1日分のサプリが小分けになっている', 'デザインが好き', 'サプリ診断が役立った', 'LINE Botが便利', '特になし',
-    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える'
+    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える', 'オンにする', 'オフにする'
 ]
 FB_QUESTIONS_NUM = 3
 fb_questions = {
@@ -255,6 +257,9 @@ def message_text(event):
                 TextSendMessage(text='変更を取りやめました。')
             )
         elif event.message.text == '天気' or event.message.text == '天気予報':
+            pref, city = parse_address(user.address)
+            forecast = fetch_weather_driver(pref, city)
+            print(forecast)
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(text='天気予報機能は現在開発中です...')
@@ -277,7 +282,7 @@ def message_location(event):
     line_bot_api.reply_message(
         event.reply_token,
         [
-            TextSendMessage(text='現在地を' + user.address + 'に設定しました。今後は「天気」と送ると現在地の天気予報が返ってくるようになります。'),
+            TextSendMessage(text='現在地を' + user.address + 'に設定しました。今後は「天気」または「天気予報」と送ると現在地の天気予報が返ってくるようになります。'),
             TextSendMessage(text='初期設定は以上となります。今後の基本操作・設定は画面下のメニューから行なってください。')
         ]
     )

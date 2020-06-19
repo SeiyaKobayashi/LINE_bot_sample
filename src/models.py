@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # models.py
 
 from flask_sqlalchemy import SQLAlchemy
