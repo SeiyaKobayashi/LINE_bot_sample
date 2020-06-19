@@ -59,7 +59,6 @@ def save_as_JSON():
 def fetch_weather_details(url):
     forecast = []
     soup = BeautifulSoup(requests.get(url).text, 'lxml')
-    print('soup:', soup)
     weather_today = soup.find('div', id='main').find_all('table')[0]
     rows = weather_today.find_all('tr')
     for row in rows:
@@ -72,7 +71,6 @@ def fetch_weather_details(url):
             for i, col in enumerate(row.find_all('td')):
                 forecast[i][(translator.translate(row.find('th').text).text).title().replace(' ', '')] = col.text.strip().replace('\n', '')
 
-    print('forecast:', forecast)
     return forecast
 
 
@@ -91,7 +89,7 @@ def parse_address(addr):
 def fetch_weather_driver(pref, city):
     with open('src/areas.json') as f:
         city_ids = json.load(f)
-        try:
-            return fetch_weather_details('http://weather.livedoor.com/area/forecast/'+city_ids[pref][city])
-        except:
+        if not city in city_ids[pref]:
             return None
+        else:
+            return fetch_weather_details('http://weather.livedoor.com/area/forecast/'+city_ids[pref][city])
