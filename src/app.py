@@ -30,7 +30,8 @@ handler = WebhookHandler(channel_secret)
 MSGS_IGNORED = [
     'とても残念に思う', 'どちらかといえば残念に思う', 'どちらでもない', 'どちらかといえば残念に思わない', '全く残念に思わない',
     'サプリの効果が感じられた', '1日分のサプリが小分けになっている', 'デザインが好き', 'サプリ診断が役立った', 'LINE Botが便利', '特になし',
-    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える', 'オンにする', 'オフにする'
+    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える', 'オンにする', 'オフにする', 'すべてみる', '9', '12', '15',
+    '18', '21', '0', '3', '6'
 ]
 FB_QUESTIONS_NUM = 3
 fb_questions = {
@@ -259,11 +260,24 @@ def message_text(event):
         elif event.message.text == '天気' or event.message.text == '天気予報':
             pref, city = parse_address(user.address)
             forecast = fetch_weather_driver(pref, city)
-            print('forecast:', forecast)
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text='天気予報機能は現在開発中です...')
-            )
+            if not forecast:
+                line_bot_api.reply_message(
+                    event.reply_token,
+                    TextSendMessage(text='この天気予報はお住まいの地域には対応していないようです...\n今後のアップデートをお待ちください。')
+                )
+            else:
+                items = [
+                    QuickReplyButton(
+                        action=PostbackAction(label=time, text=time, data='display_time='time)
+                    ) for time in ['すべてみる', '9', '12', '15', '18', '21', '0', '3', '6']
+                ]
+                line_bot_api.reply_message(
+                    event.reply_token,
+                    TextSendMessage(
+                        text='何時頃の天気予報を表示しますか?',
+                        quick_reply=QuickReply(items=items)
+                    )
+                )
         elif event.message.text in MSGS_IGNORED:
             pass
         else:
@@ -302,6 +316,29 @@ def generateMsgTemplate(event, keyword):
     )
 
 
+def display_weather_info(event, time, pref, city, forecast):
+    month = datetime.fromtimestamp(event.timestamp // 1000).time().month
+    day = datetime.fromtimestamp(event.timestamp // 1000).time().day
+    time_index = {'0': 0, '3': 1, '6': 2, '9': 3, '12': 4, '15': 5, '18': 6, '21': 7}
+
+    if time == 'すべてみる':
+        template = month+'月'+day+'日の'+pref+city+'の天気予報です。\n\n'
+        template += ''.join([forecast[time_index[i]]['time']+':\n天気: '+forecast[time_index[i]]['Weather']+'\n気温: '+forecast[time_index[i]]['Temperature']) \
+        +'\n湿度: '+forecast[time_index[i]]['Humidity']+'\n降水量: '+forecast[time_index[i]]['Precipitation']+'\n風速: '+forecast[time_index[i]]['WindSpeed'] for i in time_index])
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=template)
+        )
+    else:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text=month+'月'+day+'日'+forecast[time_index[time]]['time']+'頃の'+pref+city+'の天気は'+forecast[time_index[time]]['Weather']+'、気温は' \
+                    +forecast[time_index[time]]['Temperature'])+'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index[time]]['Humidity'] \
+                    +'\n降水量: '+forecast[time_index[time]]['Precipitation']+'\n風速: '+forecast[time_index[time]]['WindSpeed']
+        )
+
+
 @handler.add(PostbackEvent)
 def on_postback(event):
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
@@ -334,6 +371,10 @@ def on_postback(event):
                     TextSendMessage(text='初期設定は以上となります。今後の基本操作・設定は画面下のメニューから行なってください。')
                 ]
             )
+    elif 'display_time' in event.postback.data:
+        pref, city = parse_address(user.address)
+        forecast = fetch_weather_driver(pref, city)
+        display_weather_info(event, event.postback.data.split('=')[1], pref, city, forecast)
     else:
         if '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=1':
             sendQuickReply(event, 2)
