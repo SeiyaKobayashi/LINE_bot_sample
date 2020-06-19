@@ -4,3 +4,9 @@ Flask-Migrate
 PyMySQL
 gunicorn
 line-bot-sdk
+requests
+json
+re
+xml
+bs4
+googletrans
