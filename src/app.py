@@ -391,7 +391,7 @@ def message_text(event):
                     )
                 )
             else:
-                pref, city = parse_address(user.address)
+                pref, city = parse_address(user.location)
                 with open('src/areas.json') as f:
                     city_ids = json.load(f)
                     if not city in city_ids[pref]:
@@ -439,9 +439,14 @@ def message_location(event):
     user.location = event.message.address
     db.session.commit()
 
+    items = [QuickReplyButton(action=MessageAction(label="了解", text="了解"))]
+
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text='現在地を' + user.location + 'に設定しました。メニュー内の「天気予報」から、いつでも天気の確認ができます。')
+        TextSendMessage(
+            text='現在地を' + user.location + 'に設定しました。メニュー内の「天気予報」から、いつでも天気の確認ができます。',
+            quick_reply=QuickReply(items=items)
+        )
     )
 
 
@@ -600,15 +605,22 @@ def on_postback(event):
             if not user.enabled_weather:
                 line_bot_api.reply_message(
                     event.reply_token,
-                    TextSendMessage(text='天気予報機能をオフのままに設定しました。メニュー内の「天気予報」から、いつでも設定の変更ができます。')
+                    TextSendMessage(
+                        text='天気予報機能をオフのままに設定しました。メニュー内の「天気予報」から、いつでも設定の変更ができます。'
+                    )
                 )
             else:
                 user.enabled_weather = False
                 db.session.commit()
 
+                items = [QuickReplyButton(action=MessageAction(label="了解", text="了解"))]
+
                 line_bot_api.reply_message(
                     event.reply_token,
-                    TextSendMessage(text='天気予報機能をオフにしました。メニュー内の「天気予報」から、いつでも設定の変更ができます。')
+                    TextSendMessage(
+                        text='天気予報機能をオフにしました。メニュー内の「天気予報」から、いつでも設定の変更ができます。',
+                        quick_reply=QuickReply(items=items)
+                    )
                 )
     elif 'display_time' in event.postback.data:
         pref, city = parse_address(user.location)
