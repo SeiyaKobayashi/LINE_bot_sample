@@ -88,8 +88,9 @@ def parse_address(addr):
 
 def fetch_weather_driver(pref, city):
     with open('src/areas.json') as f:
-        city_id = json.load(f)
+        city_ids = json.load(f)
+        print('city_ids:', city_ids)
         try:
-            return fetch_weather_details('http://weather.livedoor.com/area/forecast/'+city_id[pref][city])
+            return fetch_weather_details('http://weather.livedoor.com/area/forecast/'+city_ids[pref][city])
         except:
             return None

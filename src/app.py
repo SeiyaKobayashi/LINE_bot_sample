@@ -258,8 +258,10 @@ def message_text(event):
             )
         elif event.message.text == '天気' or event.message.text == '天気予報':
             pref, city = parse_address(user.address)
+            print('pref:', pref)
+            print('city:', city)
             forecast = fetch_weather_driver(pref, city)
-            print(forecast)
+            print('forecast:', forecast)
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(text='天気予報機能は現在開発中です...')
