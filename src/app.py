@@ -169,7 +169,7 @@ def message_init(event):
                 ]
             )
     else:     # If new user
-        db.session.add(User(line_id=line_bot_api.get_profile(event.source.user_id).user_id, created_at=datetime.now().timestamp()))
+        db.session.add(User(line_id=line_bot_api.get_profile(event.source.user_id).user_id, created_at=datetime.now()))
         db.session.commit()
 
         items = [
@@ -286,7 +286,7 @@ def message_text(event):
     # Use card (or image) for production
     elif not user.init_coupon:
         user.init_coupon = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-        user.init_coupon_issued_at = datetime.now().timestamp()
+        user.init_coupon_issued_at = datetime.now()
         db.session.commit()
 
         line_bot_api.reply_message(
