@@ -37,7 +37,7 @@ MSGS_IGNORED = [
     '18時', '21時', '0時', '3時', '6時', '定期購入について', '注文・お支払いについて', '配送について', 'LINE Botについて', 'サプリメントについて',
     '解約について', '配送サイクルについて', '注文内容を確認したい', '送料について', 'お支払い方法について', '配送状況を確認したい',
     '配送先住所を変更したい', 'LINE Botの使い方が分からない', 'LINE Botが使いにくい', 'いつ飲めばいいのか?', '副作用などはないのか?', '特になし',
-    'はい', 'いいえ'
+    'はい', 'いいえ', 'ユーザー名', '位置情報 (天気予報のため)', 'サプリ摂取時刻', '天気予報', 'Twitter連携'
 ]
 fb_questions = {
     1: '【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
@@ -219,7 +219,7 @@ def generateFAQCategories(confirm=False):
                 action=PostbackAction(
                     label=FAQs[category_id]['category'],
                     text=FAQs[category_id]['category'],
-                    data='category_id='+category_id)
+                    data='category_id='+str(category_id))
             ) for category_id in FAQs
         ].append(QuickReplyButton(
             action=PostbackAction(
@@ -233,7 +233,7 @@ def generateFAQCategories(confirm=False):
                 action=PostbackAction(
                     label=FAQs[category_id]['category'],
                     text=FAQs[category_id]['category'],
-                    data='category_id='+category_id)
+                    data='category_id='+str(category_id))
             ) for category_id in FAQs
         ]
 
@@ -291,19 +291,14 @@ def message_text(event):
 
         line_bot_api.reply_message(
             event.reply_token,
-            [
-                TextSendMessage(
-                    text=user.name+'さん、LINE Botへようこそ！初期設定は以上となります。\n' \
-                        'この度LINE Botに登録してくださったお礼に、次回以降の月々のお支払い等でご利用頂ける限定クーポンを発行致しました。\n' \
-                        'ご利用方法等の詳細は以下のメッセージをご確認ください！'
-                ),
-                TextSendMessage(
-                    text=user.name+'さんのクーポンコードは、'+user.init_coupon+'になります。\n' \
-                        'このコードを決済画面のクーポンフォームに入力することで、決済金額から「1000円引き」となります。' \
-                        'ただし、本クーポンのご利用期限は本日より3ヶ月となっておりますので、予めご注意ください。\n' \
-                        'クーポンコードは、画面下メニューの「登録情報」よりご確認頂けます。'
-                )
-            ]
+            TextSendMessage(
+                text='初期設定は以上となります。今後の基本操作は、画面下のメニューから行なってください。\n' \
+                    'またこの度、LINE Botに登録してくださったお礼に、月々のお支払い等でご利用頂ける限定クーポンを発行致しました。\n' \
+                    +user.name+'さんのクーポンコードは、\n\n'+user.init_coupon+'\n\nです。。\n' \
+                    'このコードを決済画面で入力することで、決済金額が「1000円引き」となります。' \
+                    'ただし、本クーポンのご利用期限は本日より3ヶ月となっておりますので、予めご注意ください。' \
+                    'クーポンコードは、画面下メニューの「登録情報」よりご確認頂けます。'
+            )
         )
     else:
         if event.message.text == '登録情報':
@@ -322,39 +317,16 @@ def message_text(event):
                 )
             )
         elif event.message.text == '設定変更':
-            setting_template = ButtonsTemplate(
-                text='変更したい項目を選択してください',
-                actions=[
-                    PostbackTemplateAction(
-                        label='ユーザー名',
-                        data='name'
-                    ),
-                    PostbackTemplateAction(
-                        label='位置情報 (天気予報のため)',
-                        data='location'
-                    ),
-                    PostbackTemplateAction(
-                        label='サプリ摂取時刻',
-                        data='default_time'
-                    ),
-                    PostbackTemplateAction(
-                        label='天気予報',
-                        data='enabled_weather'
-                    ),
-                    PostbackTemplateAction(
-                        label='Twitter連携',
-                        data='enabled_twitter'
-                    )
-                ]
-            )
-            line_bot_api.reply_message(
-                event.reply_token,
-                TemplateSendMessage(alt_text='設定変更', template=setting_template)
-            )
-        elif event.message.text == '変更しない':
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text='変更を取りやめました。')
+            items = [
+                QuickReplyButton(action=PostbackAction(label='ユーザー名', text='ユーザー名', data='name')),
+                QuickReplyButton(action=PostbackAction(label='位置情報 (天気予報のため)', text='位置情報 (天気予報のため)', data='location')),
+                QuickReplyButton(action=PostbackAction(label='サプリ摂取時刻', text='サプリ摂取時刻', data='default_time')),
+                QuickReplyButton(action=PostbackAction(label='天気予報', text='天気予報', data='enabled_weather')),
+                QuickReplyButton(action=PostbackAction(label='Twitter連携', text='Twitter連携', data='enabled_twitter')),
+            ]
+            TextSendMessage(
+                text='変更したい項目を下から選択してください。',
+                quick_reply=QuickReply(items=items)
             )
         elif event.message.text == 'フィードバック':
             sendQuickReply_FB(event, 1)
