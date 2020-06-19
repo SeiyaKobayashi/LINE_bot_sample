@@ -325,8 +325,10 @@ def display_weather_info(event, time, pref, city, forecast):
 
     if time == 'すべてみる':
         template = str(month)+'月'+str(day)+'日の'+pref+city+'の天気予報です。\n\n'
-        template += ''.join([forecast[time_index[i]]['time']+':\n天気: '+forecast[time_index[i]]['Weather']+'\n気温: '+forecast[time_index[i]]['Temperature'] \
-        +'\n湿度: '+forecast[time_index[i]]['Humidity']+'\n降水量: '+forecast[time_index[i]]['Precipitation']+'\n風速: '+forecast[time_index[i]]['WindSpeed']+'\n\n' for i in time_index])
+        template += ''.join([forecast[time_index[i]]['time']+':\n天気: '+forecast[time_index[i]]['Weather']+'\n気温: ' \
+            +forecast[time_index[i]]['Temperature']+'\n湿度: '+forecast[time_index[i]]['Humidity']+'\n降水量: ' \
+            +forecast[time_index[i]]['Precipitation']+'\n風速: '+forecast[time_index[i]]['WindSpeed']+('' if i=='21時' else '\n\n') \
+            for i in time_index])
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=template)
@@ -335,8 +337,9 @@ def display_weather_info(event, time, pref, city, forecast):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text=str(month)+'月'+str(day)+'日'+forecast[time_index[time]]['time']+'頃の'+pref+city+'の天気は'+forecast[time_index[time]]['Weather']+'、気温は' \
-                    +forecast[time_index[time]]['Temperature']+'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index[time]]['Humidity'] \
+                text=str(month)+'月'+str(day)+'日'+forecast[time_index[time]]['time']+'頃の'+pref+city+'の天気は' \
+                    +forecast[time_index[time]]['Weather']+'、気温は'+forecast[time_index[time]]['Temperature'] \
+                    +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index[time]]['Humidity'] \
                     +'\n降水量: '+forecast[time_index[time]]['Precipitation']+'\n風速: '+forecast[time_index[time]]['WindSpeed']
             )
         )
