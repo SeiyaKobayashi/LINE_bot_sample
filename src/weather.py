@@ -51,7 +51,7 @@ def expand_area(area_dict):
 def save_as_JSON():
     area_dict_new = expand_area(fetch_area())
     print('Saving data to JSON file...')
-    with open('areas.json', 'w') as f:
+    with open('src/areas.json', 'w') as f:
         json.dump(area_dict_new, f, indent=4, ensure_ascii=False)
     print('Done.')
 
@@ -87,7 +87,7 @@ def parse_address(addr):
 
 
 def fetch_weather_driver(pref, city):
-    with open('areas.json') as f:
+    with open('src/areas.json') as f:
         city_id = json.load(f)
         try:
             return fetch_weather_details('http://weather.livedoor.com/area/forecast/'+city_id[pref][city])
