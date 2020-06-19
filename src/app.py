@@ -268,7 +268,7 @@ def message_text(event):
             else:
                 items = [
                     QuickReplyButton(
-                        action=PostbackAction(label=time, text=time, data='display_time='time)
+                        action=PostbackAction(label=time, text=time, data='display_time='+time)
                     ) for time in ['すべてみる', '9', '12', '15', '18', '21', '0', '3', '6']
                 ]
                 line_bot_api.reply_message(
