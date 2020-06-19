@@ -259,25 +259,26 @@ def message_text(event):
             )
         elif event.message.text == '天気' or event.message.text == '天気予報':
             pref, city = parse_address(user.address)
-            forecast = fetch_weather_driver(pref, city)
-            if not forecast:
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(text='この天気予報はお住まいの地域には対応していないようです...\n今後のアップデートをお待ちください。')
-                )
-            else:
-                items = [
-                    QuickReplyButton(
-                        action=PostbackAction(label=time, text=time, data='display_time='+time)
-                    ) for time in ['すべてみる', '9時', '12時', '15時', '18時', '21時', '0時', '3時', '6時']
-                ]
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(
-                        text='何時頃の天気予報を表示しますか?',
-                        quick_reply=QuickReply(items=items)
+            with open('src/areas.json') as f:
+                city_ids = json.load(f)
+                if not city in city_ids[pref]:
+                    line_bot_api.reply_message(
+                        event.reply_token,
+                        TextSendMessage(text='この天気予報はお住まいの地域には対応していないようです...\n今後のアップデートをお待ちください。')
                     )
-                )
+                else:
+                    items = [
+                        QuickReplyButton(
+                            action=PostbackAction(label=time, text=time, data='display_time='+time)
+                        ) for time in ['すべてみる', '9時', '12時', '15時', '18時', '21時', '0時', '3時', '6時']
+                    ]
+                    line_bot_api.reply_message(
+                        event.reply_token,
+                        TextSendMessage(
+                            text='何時頃の天気予報を表示しますか?',
+                            quick_reply=QuickReply(items=items)
+                        )
+                    )
         elif event.message.text in MSGS_IGNORED:
             pass
         else:
@@ -322,9 +323,9 @@ def display_weather_info(event, time, pref, city, forecast):
     time_index = {'0時': 0, '3時': 1, '6時': 2, '9時': 3, '12時': 4, '15時': 5, '18時': 6, '21時': 7}
 
     if time == 'すべてみる':
-        template = month+'月'+day+'日の'+pref+city+'の天気予報です。\n\n'
+        template = str(month)+'月'+str(day)+'日の'+pref+city+'の天気予報です。\n\n'
         template += ''.join([forecast[time_index[i]]['time']+':\n天気: '+forecast[time_index[i]]['Weather']+'\n気温: '+forecast[time_index[i]]['Temperature'] \
-        +'\n湿度: '+forecast[time_index[i]]['Humidity']+'\n降水量: '+forecast[time_index[i]]['Precipitation']+'\n風速: '+forecast[time_index[i]]['WindSpeed'] for i in time_index])
+        +'\n湿度: '+forecast[time_index[i]]['Humidity']+'\n降水量: '+forecast[time_index[i]]['Precipitation']+'\n風速: '+forecast[time_index[i]]['WindSpeed']+'\n\n' for i in time_index])
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=template)
