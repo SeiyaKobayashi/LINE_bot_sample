@@ -269,7 +269,7 @@ def message_text(event):
                 items = [
                     QuickReplyButton(
                         action=PostbackAction(label=time, text=time, data='display_time='+time)
-                    ) for time in ['すべてみる', '9', '12', '15', '18', '21', '0', '3', '6']
+                    ) for time in ['すべてみる', '9時', '12時', '15時', '18時', '21時', '0時', '3時', '6時']
                 ]
                 line_bot_api.reply_message(
                     event.reply_token,
@@ -317,9 +317,9 @@ def generateMsgTemplate(event, keyword):
 
 
 def display_weather_info(event, time, pref, city, forecast):
-    month = datetime.fromtimestamp(event.timestamp // 1000).time().month
-    day = datetime.fromtimestamp(event.timestamp // 1000).time().day
-    time_index = {'0': 0, '3': 1, '6': 2, '9': 3, '12': 4, '15': 5, '18': 6, '21': 7}
+    month = datetime.fromtimestamp(event.timestamp // 1000).month
+    day = datetime.fromtimestamp(event.timestamp // 1000).day
+    time_index = {'0時': 0, '3時': 1, '6時': 2, '9時': 3, '12時': 4, '15時': 5, '18時': 6, '21時': 7}
 
     if time == 'すべてみる':
         template = month+'月'+day+'日の'+pref+city+'の天気予報です。\n\n'
