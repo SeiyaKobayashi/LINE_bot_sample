@@ -30,8 +30,8 @@ handler = WebhookHandler(channel_secret)
 MSGS_IGNORED = [
     'とても残念に思う', 'どちらかといえば残念に思う', 'どちらでもない', 'どちらかといえば残念に思わない', '全く残念に思わない',
     'サプリの効果が感じられた', '1日分のサプリが小分けになっている', 'デザインが好き', 'サプリ診断が役立った', 'LINE Botが便利', '特になし',
-    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える', 'オンにする', 'オフにする', 'すべてみる', '9', '12', '15',
-    '18', '21', '0', '3', '6'
+    '価格を下げる', 'サプリの配合を変える', '購入後のサポート体制を整える', 'オンにする', 'オフにする', 'すべてみる', '9時', '12時', '15時',
+    '18時', '21時', '0時', '3時', '6時'
 ]
 FB_QUESTIONS_NUM = 3
 fb_questions = {
@@ -333,9 +333,10 @@ def display_weather_info(event, time, pref, city, forecast):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text=month+'月'+day+'日'+forecast[time_index[time]]['time']+'頃の'+pref+city+'の天気は'+forecast[time_index[time]]['Weather']+'、気温は' \
-                    +forecast[time_index[time]]['Temperature'])+'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index[time]]['Humidity'] \
+                text=str(month)+'月'+str(day)+'日'+forecast[time_index[time]]['time']+'頃の'+pref+city+'の天気は'+forecast[time_index[time]]['Weather']+'、気温は' \
+                    +forecast[time_index[time]]['Temperature']+'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index[time]]['Humidity'] \
                     +'\n降水量: '+forecast[time_index[time]]['Precipitation']+'\n風速: '+forecast[time_index[time]]['WindSpeed']
+            )
         )
 
 
