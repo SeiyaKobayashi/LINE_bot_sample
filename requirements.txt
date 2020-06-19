@@ -7,3 +7,4 @@ line-bot-sdk
 requests
 beautifulsoup4
 googletrans
+lxml
