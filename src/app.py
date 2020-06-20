@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 # app.py
 
-import os
-import json
-import random
-import string
+import os, json, random, string, schedule
 from datetime import datetime
+from time import sleep
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -20,6 +18,7 @@ from src.models import db, User, Feedback
 from src.weather import parse_address, fetch_weather_driver
 
 app = create_app()
+scheduler()
 
 # Get chnnel secret and channel access token from environment
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -94,6 +93,37 @@ FAQs = {
 }
 
 
+def scheduler():
+    schedule.every().day.at("6:00").do(push_weather_forecast, 6)
+    schedule.every().day.at("12:00").do(push_weather_forecast, 12)
+    schedule.every().day.at("18:00").do(push_weather_forecast, 18)
+    schedule.every().day.at("0:00").do(push_weather_forecast, 0)
+
+    while True:
+        schedule.run_pending()
+        sleep(30)
+
+
+def push_weather_forecast(time):
+    users = ensureDBConnection('user', True)
+    month = datetime.fromtimestamp(event.timestamp // 1000).month
+    day = datetime.fromtimestamp(event.timestamp // 1000).day
+    time_index = {6: '6時', 12: '12時', 18: '18時', 0: '0時'}
+
+    for user in users:
+        pref, city = parse_address(user.location)
+        forecast = fetch_weather_driver(pref, city)
+        line_bot_api.push_message(
+            user.line_id,
+            TextSendMessage(
+                text=str(month)+'月'+str(day)+'日'+forecast[time_index[time]]['time']+'頃の'+pref+city+'の天気は' \
+                    +forecast[time_index[time]]['Weather']+'、気温は'+forecast[time_index[time]]['Temperature'] \
+                    +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index[time]]['Humidity'] \
+                    +'\n降水量: '+forecast[time_index[time]]['Precipitation']+'\n風速: '+forecast[time_index[time]]['WindSpeed']
+            )
+        )
+
+
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header from request
@@ -109,6 +139,28 @@ def callback():
     return 'OK'
 
 
+# WIP: there might be better solutions (i.e., https://flask-sqlalchemy.palletsprojects.com/en/2.x/config/)
+def ensureDBConnection(table_name, multiple=False):
+    duration = 2
+    max_num_retries = 5
+    for _ in range(max_num_retries):
+        try:
+            if table_name == 'user':
+                if multiple:
+                    return User.query.filter_by(enabled_weather=True, location!=None)
+                else:
+                    return User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+            error = None
+        except:
+            pass
+
+        if error:
+            sleep(duration)
+            duration *= 2
+        else:
+            break
+
+
 def setGreeting(hour):
     if 5 <= hour and hour <= 9:
         return 'おはようございます！'
@@ -121,7 +173,7 @@ def setGreeting(hour):
 @handler.add(FollowEvent)
 def message_init(event):
 
-    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    user = ensureDBConnection('user')
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp // 1000).time().hour)
 
     if user:     # If user account already exists (i.e., past user)
@@ -241,7 +293,7 @@ def generateFAQCategories(confirm=False):
 @handler.add(MessageEvent, message=TextMessage)
 def message_text(event):
 
-    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    user = ensureDBConnection('user')
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp // 1000).time().hour)
 
     if event.message.text in MSGS_IGNORED:
@@ -413,7 +465,7 @@ def message_text(event):
 
 @handler.add(MessageEvent, message=LocationMessage)
 def message_location(event):
-    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    user = ensureDBConnection('user')
     user.location = event.message.address
     db.session.commit()
 
@@ -476,7 +528,7 @@ def display_weather_info(event, time, pref, city, forecast):
 
 @handler.add(PostbackEvent)
 def on_postback(event):
-    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+    user = ensureDBConnection('user')
 
     if event.postback.data == 'name':
         sendQuickReply_settings(event, 'LINE Bot内でのユーザー名')
