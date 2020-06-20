@@ -94,7 +94,7 @@ FAQs = {
 
 def push_weather_forecast(time=datetime.now().hour):
     with app.app_context():
-        users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
+        users = User.query.filter(User.enabled_weather==True, User.location!=None)
         month = datetime.now().month
         day = datetime.now().day
         if time >= 0 and time < 6:
