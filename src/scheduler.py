@@ -28,4 +28,4 @@ def push_weather_forecast(time):
 
 
 if __name__ == "__main__":
-    push_weather_forecast(sys.argv[1])
+    push_weather_forecast(int(sys.argv[1]))
