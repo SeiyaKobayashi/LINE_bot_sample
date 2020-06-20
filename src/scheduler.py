@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # scheduler.py
 
+import sys
 from datetime import datetime
 from linebot.models import TextSendMessage
 from src.app import ensureDBConnection, line_bot_api
