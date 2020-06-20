@@ -514,12 +514,13 @@ def sendQuickReply_settings(event, keyword):
 
 def modify_settings(event, user, keyword):
     if keyword == 'name':
+        name_old = user.name
         user.name = ' '     # Note: not '' => True; not ' ' => False
         db.session.commit()
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='新しいユーザー名を入力してください。\n\n旧ユーザー名: '+user.name
+                text='新しいユーザー名を入力してください。\n\n旧ユーザー名: '+name_old
             )
         )
     elif keyword == 'location':
@@ -535,6 +536,7 @@ def modify_settings(event, user, keyword):
         current_time = datetime.now()
         init_time = ('0'+str(current_time.hour) if len(str(current_time.hour))==1 else str(current_time.hour)) \
         +':'+('0'+str(current_time.minute) if len(str(current_time.minute))==1 else str(current_time.minute))
+        print('init_time:', init_time)
         items = [
             QuickReplyButton(
                 action=DatetimePickerAction(
@@ -545,6 +547,7 @@ def modify_settings(event, user, keyword):
                 )
             )
         ]
+        print('items:', items)
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
