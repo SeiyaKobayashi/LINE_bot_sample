@@ -524,7 +524,7 @@ def on_postback(event):
                         label=FAQs[int(category_id)]['questions'][question_id]['Q'],
                         text=FAQs[int(category_id)]['questions'][question_id]['Q'],
                         data='category_id='+category_id+'&question_id='+str(question_id)
-                ) for question_id in FAQs[int(category_id)]['questions']
+                )) for question_id in FAQs[int(category_id)]['questions']
             ]
             line_bot_api.reply_message(
                 event.reply_token,
