@@ -128,11 +128,9 @@ def ensureDBConnection(table_name, multiple=False):
                 if multiple:
                     users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
                     error = None
-                    return users
                 else:
                     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
                     error = None
-                    return user
         except:
             error = True
             pass
@@ -142,6 +140,8 @@ def ensureDBConnection(table_name, multiple=False):
                 duration *= 2
             else:
                 break
+
+    return users if multiple else user
 
 
 def setGreeting(hour):
