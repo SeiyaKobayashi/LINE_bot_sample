@@ -92,17 +92,17 @@ FAQs = {
 }
 
 
-def scheduler():
-    schedule.every().day.at("06:00").do(push_weather_forecast, 6)
-    schedule.every().day.at("12:00").do(push_weather_forecast, 12)
-    schedule.every().day.at("18:00").do(push_weather_forecast, 18)
-    schedule.every().day.at("00:00").do(push_weather_forecast, 0)
-    # just for testing
-    schedule.every(3).minutes.do(push_weather_forecast, 18)
-
-    while True:
-        schedule.run_pending()
-        sleep(30)
+# def scheduler():
+#     schedule.every().day.at("06:00").do(push_weather_forecast, 6)
+#     schedule.every().day.at("12:00").do(push_weather_forecast, 12)
+#     schedule.every().day.at("18:00").do(push_weather_forecast, 18)
+#     schedule.every().day.at("00:00").do(push_weather_forecast, 0)
+#     # just for testing
+#     schedule.every(3).minutes.do(push_weather_forecast, 18)
+#
+#     while True:
+#         schedule.run_pending()
+#         sleep(30)
 
 
 def push_weather_forecast(time):
@@ -125,7 +125,7 @@ def push_weather_forecast(time):
         )
 
 
-scheduler()
+# scheduler()
 
 
 @app.route("/callback", methods=['POST'])
