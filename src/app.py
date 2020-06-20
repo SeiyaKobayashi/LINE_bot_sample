@@ -147,7 +147,7 @@ def ensureDBConnection(table_name, multiple=False):
         try:
             if table_name == 'user':
                 if multiple:
-                    return User.query.filter_by(enabled_weather=True, location!=None)
+                    return User.query.filter_by(User.enabled_weather==True, User.location!=None)
                 else:
                     return User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
             error = None
