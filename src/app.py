@@ -37,7 +37,7 @@ MSGS_IGNORED = [
     '18時', '21時', '0時', '3時', '6時', '定期購入について', '注文・お支払いについて', '配送について', 'LINE Botについて', 'サプリメントについて',
     '解約について', '配送サイクルについて', '注文内容を確認したい', '送料について', 'お支払い方法について', '配送状況を確認したい',
     '配送先住所を変更したい', 'LINE Botの使い方が分からない', 'LINE Botが使いにくい', 'いつ飲めばいいのか?', '副作用などはないのか?', '特になし',
-    'はい', 'いいえ', 'ユーザー名', '位置情報 (天気予報のため)', 'サプリ摂取時刻', '天気予報', 'Twitter連携'
+    'はい', 'いいえ', 'ユーザー名を変更', '位置情報を変更', 'サプリ摂取時刻を変更', '天気予報設定を変更', 'Twitter連携設定を変更'
 ]
 fb_questions = {
     1: '【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
@@ -318,15 +318,18 @@ def message_text(event):
             )
         elif event.message.text == '設定変更':
             items = [
-                QuickReplyButton(action=PostbackAction(label='ユーザー名', text='ユーザー名', data='name')),
-                QuickReplyButton(action=PostbackAction(label='位置情報 (天気予報のため)', text='位置情報 (天気予報のため)', data='location')),
-                QuickReplyButton(action=PostbackAction(label='サプリ摂取時刻', text='サプリ摂取時刻', data='default_time')),
-                QuickReplyButton(action=PostbackAction(label='天気予報', text='天気予報', data='enabled_weather')),
-                QuickReplyButton(action=PostbackAction(label='Twitter連携', text='Twitter連携', data='enabled_twitter'))
+                QuickReplyButton(action=PostbackAction(label='ユーザー名を変更', text='ユーザー名を変更', data='name')),
+                QuickReplyButton(action=PostbackAction(label='位置情報を変更', text='位置情報を変更', data='location')),
+                QuickReplyButton(action=PostbackAction(label='サプリ摂取時刻を変更', text='サプリ摂取時刻を変更', data='default_time')),
+                QuickReplyButton(action=PostbackAction(label='天気予報設定を変更', text='天気予報設定を変更', data='enabled_weather')),
+                QuickReplyButton(action=PostbackAction(label='Twitter連携設定を変更', text='Twitter連携設定を変更', data='enabled_twitter'))
             ]
-            TextSendMessage(
-                text='変更したい項目を下から選択してください。',
-                quick_reply=QuickReply(items=items)
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text='変更したい項目を下から選択してください。',
+                    quick_reply=QuickReply(items=items)
+                )
             )
         elif event.message.text == 'フィードバック':
             sendQuickReply_FB(event, 1)
@@ -502,8 +505,6 @@ def on_postback(event):
         )
     elif 'category_id' in event.postback.data:
         category_id = event.postback.data.split('=')[1]
-        print('category_id:', type(category_id))
-        print('FAQs[category_id]:', FAQs[category_id])
         if 'question_id' in event.postback.data:
             question_id = event.postback.data.split('=')[2]
             line_bot_api.reply_message(
@@ -522,7 +523,7 @@ def on_postback(event):
                     action=PostbackAction(
                         label=FAQs[int(category_id)]['questions'][question_id]['Q'],
                         text=FAQs[int(category_id)]['questions'][question_id]['Q'],
-                        data='category_id='+category_id+'&question_id='+question_id)
+                        data='category_id='+category_id+'&question_id='+str(question_id)
                 ) for question_id in FAQs[int(category_id)]['questions']
             ]
             line_bot_api.reply_message(
