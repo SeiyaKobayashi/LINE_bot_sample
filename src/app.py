@@ -92,38 +92,15 @@ FAQs = {
 }
 
 
-def scheduler():
-    schedule.every().day.at("06:00").do(push_weather_forecast, 6)
-    schedule.every().day.at("12:00").do(push_weather_forecast, 12)
-    schedule.every().day.at("18:00").do(push_weather_forecast, 18)
-    schedule.every().day.at("00:00").do(push_weather_forecast, 0)
-
-    while True:
-        schedule.run_pending()
-        sleep(30)
-
-
-def push_weather_forecast(time):
-    users = ensureDBConnection('user', True)
-    month = datetime.fromtimestamp(event.timestamp // 1000).month
-    day = datetime.fromtimestamp(event.timestamp // 1000).day
-    time_index = {6: '6時', 12: '12時', 18: '18時', 0: '0時'}
-
-    for user in users:
-        pref, city = parse_address(user.location)
-        forecast = fetch_weather_driver(pref, city)
-        line_bot_api.push_message(
-            user.line_id,
-            TextSendMessage(
-                text=str(month)+'月'+str(day)+'日'+forecast[time_index[time]]['time']+'頃の'+pref+city+'の天気は' \
-                    +forecast[time_index[time]]['Weather']+'、気温は'+forecast[time_index[time]]['Temperature'] \
-                    +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index[time]]['Humidity'] \
-                    +'\n降水量: '+forecast[time_index[time]]['Precipitation']+'\n風速: '+forecast[time_index[time]]['WindSpeed']
-            )
-        )
-
-
-scheduler()
+# def scheduler():
+#     schedule.every().day.at("06:00").do(push_weather_forecast, 6)
+#     schedule.every().day.at("12:00").do(push_weather_forecast, 12)
+#     schedule.every().day.at("18:00").do(push_weather_forecast, 18)
+#     schedule.every().day.at("00:00").do(push_weather_forecast, 0)
+#
+#     while True:
+#         schedule.run_pending()
+#         sleep(30)
 
 
 @app.route("/callback", methods=['POST'])
@@ -148,15 +125,12 @@ def ensureDBConnection(table_name, multiple=False):
     for _ in range(max_num_retries):
         try:
             if table_name == 'user':
-                print('enter')
                 if multiple:
                     return User.query.filter_by(User.enabled_weather==True, User.location!=None)
                 else:
-                    print('ok')
                     return User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
             error = None
         except:
-            print('error')
             pass
 
         if error:
