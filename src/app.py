@@ -16,7 +16,7 @@ from linebot.models import (
     ButtonsTemplate, QuickReply, QuickReplyButton,
 )
 from src import create_app
-from src.models import db, User
+from src.models import db, User, Feedback
 from src.weather import parse_address, fetch_weather_driver
 
 app = create_app()
@@ -416,15 +416,23 @@ def message_location(event):
     user.location = event.message.address
     db.session.commit()
 
-    items = [QuickReplyButton(action=MessageAction(label="了解", text="了解"))]
+    if not user.init_coupon:
+        items = [QuickReplyButton(action=MessageAction(label="了解", text="了解"))]
 
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(
-            text='現在地を' + user.location + 'に設定しました。メニュー内の「天気予報」から、いつでも天気の確認ができます。',
-            quick_reply=QuickReply(items=items)
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='現在地を' + user.location + 'に設定しました。メニュー内の「天気予報」から、いつでも天気の確認ができます。',
+                quick_reply=QuickReply(items=items)
+            )
         )
-    )
+    else:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='現在地を' + user.location + 'に設定しました。メニュー内の「天気予報」から、いつでも天気の確認ができます。'
+            )
+        )
 
 
 def sendQuickReply_settings(event, keyword):
@@ -580,7 +588,7 @@ def on_postback(event):
                     )
                 )
         elif event.postback.data.split('=')[1] == '0':
-            if not user.enabled_weather:
+            if user.enabled_weather == False:
                 line_bot_api.reply_message(
                     event.reply_token,
                     TextSendMessage(
