@@ -8,4 +8,4 @@ requests
 beautifulsoup4
 googletrans
 lxml
-schedule
+Flask-APScheduler

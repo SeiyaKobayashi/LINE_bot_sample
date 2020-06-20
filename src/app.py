@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # app.py
 
-import os, json, random, string, schedule
+import os, json, random, string
 from datetime import datetime
 from time import sleep
 from flask import Flask, request, abort
+from apscheduler.schedulers.blocking import BlockingScheduler
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
@@ -18,6 +19,7 @@ from src.models import db, User, Feedback
 from src.weather import parse_address, fetch_weather_driver
 
 app = create_app()
+scheduler = BackgroundScheduler()
 
 # Get chnnel secret and channel access token from environment
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -105,11 +107,18 @@ FAQs = {
 #         sleep(30)
 
 
-def push_weather_forecast(time):
+# @scheduler.scheduled_job('cron', hour='0, 6, 12, 18')
+@scheduler.scheduled_job('interval', minutes=3)
+def push_weather_forecast(time=datetime.now().hour):
     users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
     month = datetime.now().month
     day = datetime.now().day
-    time_index = {6: '6時', 12: '12時', 18: '18時', 0: '0時'}
+    if time >= 0 and time < 6:
+        time_index = 6
+    elif time >= 6 and time < 12:
+        time_index = 12
+    elif time >= 12 and time < 18:
+        time_index = 18
 
     for user in users:
         pref, city = parse_address(user.location)
@@ -117,15 +126,12 @@ def push_weather_forecast(time):
         line_bot_api.push_message(
             user.line_id,
             TextSendMessage(
-                text=str(month)+'月'+str(day)+'日'+forecast[time_index[time]]['time']+'頃の'+pref+city+'の天気は' \
-                    +forecast[time_index[time]]['Weather']+'、気温は'+forecast[time_index[time]]['Temperature'] \
-                    +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index[time]]['Humidity'] \
-                    +'\n降水量: '+forecast[time_index[time]]['Precipitation']+'\n風速: '+forecast[time_index[time]]['WindSpeed']
+                text=str(month)+'月'+str(day)+'日'+forecast[time_index]['time']+'頃の'+pref+city+'の天気は' \
+                    +forecast[time_index]['Weather']+'、気温は'+forecast[time_index]['Temperature'] \
+                    +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index]['Humidity'] \
+                    +'\n降水量: '+forecast[time_index]['Precipitation']+'\n風速: '+forecast[time_index]['WindSpeed']
             )
         )
-
-
-# scheduler()
 
 
 @app.route("/callback", methods=['POST'])
@@ -694,3 +700,4 @@ def on_postback(event):
 
 if __name__ == "__main__":
     app.run()
+    scheduler.start()
