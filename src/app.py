@@ -93,30 +93,31 @@ FAQs = {
 
 
 def push_weather_forecast(time=datetime.now().hour):
-    users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
-    month = datetime.now().month
-    day = datetime.now().day
-    if time >= 0 and time < 6:
-        time_index = 6
-    elif time >= 6 and time < 12:
-        time_index = 12
-    elif time >= 12 and time < 18:
-        time_index = 18
-    else:
-        time_index = 18
+    with app.app_context():
+        users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
+        month = datetime.now().month
+        day = datetime.now().day
+        if time >= 0 and time < 6:
+            time_index = 6
+        elif time >= 6 and time < 12:
+            time_index = 12
+        elif time >= 12 and time < 18:
+            time_index = 18
+        else:
+            time_index = 18
 
-    for user in users:
-        pref, city = parse_address(user.location)
-        forecast = fetch_weather_driver(pref, city)
-        line_bot_api.push_message(
-            user.line_id,
-            TextSendMessage(
-                text=str(month)+'月'+str(day)+'日'+forecast[time_index]['time']+'頃の'+pref+city+'の天気は' \
-                    +forecast[time_index]['Weather']+'、気温は'+forecast[time_index]['Temperature'] \
-                    +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index]['Humidity'] \
-                    +'\n降水量: '+forecast[time_index]['Precipitation']+'\n風速: '+forecast[time_index]['WindSpeed']
+        for user in users:
+            pref, city = parse_address(user.location)
+            forecast = fetch_weather_driver(pref, city)
+            line_bot_api.push_message(
+                user.line_id,
+                TextSendMessage(
+                    text=str(month)+'月'+str(day)+'日'+forecast[time_index]['time']+'頃の'+pref+city+'の天気は' \
+                        +forecast[time_index]['Weather']+'、気温は'+forecast[time_index]['Temperature'] \
+                        +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index]['Humidity'] \
+                        +'\n降水量: '+forecast[time_index]['Precipitation']+'\n風速: '+forecast[time_index]['WindSpeed']
+                )
             )
-        )
 
 
 @app.route("/callback", methods=['POST'])
