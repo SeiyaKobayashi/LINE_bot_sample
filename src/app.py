@@ -124,24 +124,24 @@ def ensureDBConnection(table_name, multiple=False):
     max_num_retries = 5
     for _ in range(max_num_retries):
         try:
-            print('enter')
             if table_name == 'user':
                 if multiple:
-                    return User.query.filter_by(User.enabled_weather==True, User.location!=None)
+                    users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
+                    error = None
+                    return users
                 else:
-                    print('ok')
-                    return User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
-            error = None
+                    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+                    error = None
+                    return user
         except:
-            print('error')
             error = True
             pass
-
-        if error:
-            sleep(duration)
-            duration *= 2
-        else:
-            break
+        finally:
+            if error:
+                sleep(duration)
+                duration *= 2
+            else:
+                break
 
 
 def setGreeting(hour):
