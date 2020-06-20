@@ -18,7 +18,6 @@ from src.models import db, User, Feedback
 from src.weather import parse_address, fetch_weather_driver
 
 app = create_app()
-scheduler()
 
 # Get chnnel secret and channel access token from environment
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -122,6 +121,9 @@ def push_weather_forecast(time):
                     +'\n降水量: '+forecast[time_index[time]]['Precipitation']+'\n風速: '+forecast[time_index[time]]['WindSpeed']
             )
         )
+
+
+scheduler()
 
 
 @app.route("/callback", methods=['POST'])
