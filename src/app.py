@@ -93,10 +93,10 @@ FAQs = {
 
 
 def scheduler():
-    schedule.every().day.at("6:00").do(push_weather_forecast, 6)
+    schedule.every().day.at("06:00").do(push_weather_forecast, 6)
     schedule.every().day.at("12:00").do(push_weather_forecast, 12)
     schedule.every().day.at("18:00").do(push_weather_forecast, 18)
-    schedule.every().day.at("0:00").do(push_weather_forecast, 0)
+    schedule.every().day.at("00:00").do(push_weather_forecast, 0)
 
     while True:
         schedule.run_pending()
