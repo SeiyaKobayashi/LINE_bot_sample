@@ -13,7 +13,7 @@ def catchUpdates(users=push_daily_reminder_fetch_users()):
         minute = user.default_time.split(':')[1] if user.default_time.split(':')[1][0] != '0' else user.default_time.split(':')[1][1]
         print('hour:', hour)
         print('minute:', minute)
-        bl_scheduler.add_job(push_daily_reminder, args=[user], 'cron', hour=hour, minute=minute)
+        bl_scheduler.add_job(push_daily_reminder, 'cron', hour=hour, minute=minute, args=[user])
 
 
 if __name__ == '__main__':
