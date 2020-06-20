@@ -37,6 +37,11 @@ MSGS_IGNORED = [
     '配送先住所を変更したい', 'LINE Botの使い方が分からない', 'LINE Botが使いにくい', 'いつ飲めばいいのか?', '副作用などはないのか?', '特になし',
     'はい', 'いいえ', 'ユーザー名を変更', '位置情報を変更', 'サプリ摂取時刻を変更', '天気予報設定を変更', 'Twitter連携設定を変更'
 ]
+settings = {
+    'name': 'LINE Bot内でのユーザー名',
+    'location': '天気予報に使用される位置情報',
+    'default_time': '毎日のサプリの摂取時刻'
+}
 fb_questions = {
     1: '【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
     2: '【質問②】\n\nこの製品を使ってみて良かった点を教えてください。',
@@ -502,7 +507,7 @@ def sendQuickReply_settings(event, keyword):
     ]
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=keyword+'を変更しますか？', quick_reply=QuickReply(items=items))
+        TextSendMessage(text=settings[keyword]+'を変更しますか？', quick_reply=QuickReply(items=items))
     )
 
 
@@ -547,23 +552,6 @@ def modify_settings(event, user, keyword):
                 quick_reply=QuickReply(items=items)
             )
         )
-    elif keyword == 'enabled_weather':
-        items = [
-            QuickReplyButton(action=PostbackAction(label="はい", text="はい", data='enabled_weather='+('0' if user.enabled_weather else '1'))),
-            QuickReplyButton(action=PostbackAction(label="いいえ", text="いいえ", data='enabled_weather='+('1' if user.enabled_weather else '0')))
-        ]
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(
-                text='現在は、天気予報機能が'+('オン' if user.enabled_weather else 'オフ')+'になっています。天気予報機能を'+('オフ' if user.enabled_weather else 'オン')+'にしますか?',
-                quick_reply=QuickReply(items=items)
-            )
-        )
-    elif keyword == 'enabled_twitter':
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text='Twitter連携機能は現在開発中です...')
-        )
 
 
 def display_weather_info(event, time, pref, city, forecast):
@@ -597,12 +585,8 @@ def display_weather_info(event, time, pref, city, forecast):
 def on_postback(event):
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
 
-    if event.postback.data == 'name':
-        sendQuickReply_settings(event, 'LINE Bot内でのユーザー名')
-    elif event.postback.data == 'location':
-        sendQuickReply_settings(event, '天気予報に使用される位置情報')
-    elif event.postback.data == 'default_time':
-        sendQuickReply_settings(event, '毎日のサプリの摂取時刻')
+    if event.postback.data == 'name' or event.postback.data == 'location' or event.postback.data == 'default_time':
+        sendQuickReply_settings(event, event.postback.data)
     elif event.postback.data == 'set_default_time':
         user.default_time = event.postback.params['time']
         db.session.commit()
@@ -745,6 +729,11 @@ def on_postback(event):
         pref, city = parse_address(user.location)
         forecast = fetch_weather_driver(pref, city)
         display_weather_info(event, event.postback.data.split('=')[1], pref, city, forecast)
+    elif 'enabled_twitter' in event.postback.data:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='Twitter連携機能は現在開発中です...')
+        )
     elif 'qid' in event.postback.data:
         FB = Feedback.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
         if event.postback.data.split('&')[0] == 'qid=1':
