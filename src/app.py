@@ -504,8 +504,8 @@ def on_postback(event):
             TextSendMessage(text='設定機能は現在開発中です...')
         )
     elif 'category_id' in event.postback.data:
-        category_id = event.postback.data.split('=')[1]
         if 'question_id' in event.postback.data:
+            category_id = event.postback.data.split('=')[1].split('&')[0]
             question_id = event.postback.data.split('=')[2]
             line_bot_api.reply_message(
                 event.reply_token,
@@ -518,6 +518,7 @@ def on_postback(event):
                 ]
             )
         else:
+            category_id = event.postback.data.split('=')[1]
             questions = [
                 QuickReplyButton(
                     action=PostbackAction(
