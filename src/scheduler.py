@@ -20,6 +20,6 @@ if __name__ == '__main__':
     bl_scheduler = BlockingScheduler()
     bl_scheduler.add_job(push_weather_forecast, 'cron', hour='0, 6, 12')
     bl_scheduler.start()
-    bg_scheduler = BackgroundScheduler(daemon=True)
-    bg_scheduler.add_job(catchUpdates, 'interval', seconds='10')
+    bg_scheduler = BackgroundScheduler()
+    bg_scheduler.add_job(catchUpdates, 'interval', seconds=10)
     bg_scheduler.start()
