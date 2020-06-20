@@ -332,8 +332,9 @@ def message_text(event):
                 )
             )
         elif event.message.text == 'フィードバック':
-            db.session.add(Feedback(line_id=line_bot_api.get_profile(event.source.user_id).user_id))
-            db.session.commit()
+            if not Feedback.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first():
+                db.session.add(Feedback(line_id=line_bot_api.get_profile(event.source.user_id).user_id))
+                db.session.commit()
             sendQuickReply_FB(event, 1)
         elif event.message.text == 'FAQ':
             line_bot_api.reply_message(
