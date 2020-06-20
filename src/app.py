@@ -99,15 +99,16 @@ FAQs = {
 
 def push_weather_forecast(time=datetime.now().hour):
     with app.app_context():
+        index = {'0時': 0, '3時': 1, '6時': 2, '9時': 3, '12時': 4, '15時': 5, '18時': 6, '21時': 7}
         users = User.query.filter(User.enabled_weather==True, User.location!=None)
         month = datetime.now().month
         day = datetime.now().day
         if time >= 0 and time < 6:
-            time_index = 6
+            time_index = index['6時']
         elif time >= 6 and time < 12:
-            time_index = 12
+            time_index = index['12時']
         elif time >= 12 and time < 18:
-            time_index = 18
+            time_index = index['18時']
         else:
             time_index = 0
 
@@ -378,7 +379,7 @@ def message_text(event):
         items = [
             QuickReplyButton(action=PostbackAction(label='ユーザー名を変更', text='ユーザー名を変更', data='name')),
             QuickReplyButton(action=PostbackAction(label='位置情報を変更', text='位置情報を変更', data='location')),
-            QuickReplyButton(action=PostbackAction(label='サプリ摂取時刻を変更', text='サプリ摂取時刻を変更', data='default_time')),
+            QuickReplyButton(action=PostbackAction(label='サプリ摂取時刻を変更', text='サプリ摂取時刻を変更', data='defaulttime')),
             QuickReplyButton(action=PostbackAction(label='天気予報設定を変更', text='天気予報設定を変更', data='enabled_weather')),
             QuickReplyButton(action=PostbackAction(label='Twitter連携設定を変更', text='Twitter連携設定を変更', data='enabled_twitter'))
         ]
@@ -532,11 +533,10 @@ def modify_settings(event, user, keyword):
                 quick_reply=QuickReply(items=items)
             )
         )
-    elif keyword == 'default_time':
+    elif keyword == 'defaulttime':
         current_time = datetime.now()
         init_time = ('0'+str(current_time.hour) if len(str(current_time.hour))==1 else str(current_time.hour)) \
         +':'+('0'+str(current_time.minute) if len(str(current_time.minute))==1 else str(current_time.minute))
-        print('init_time:', init_time)
         items = [
             QuickReplyButton(
                 action=DatetimePickerAction(
@@ -547,7 +547,6 @@ def modify_settings(event, user, keyword):
                 )
             )
         ]
-        print('items:', items)
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
@@ -589,7 +588,7 @@ def display_weather_info(event, time, pref, city, forecast):
 def on_postback(event):
     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
 
-    if event.postback.data == 'name' or event.postback.data == 'location' or event.postback.data == 'default_time':
+    if event.postback.data == 'name' or event.postback.data == 'location' or event.postback.data == 'defaulttime':
         sendQuickReply_settings(event, event.postback.data)
     elif event.postback.data == 'set_default_time':
         user.default_time = event.postback.params['time']
