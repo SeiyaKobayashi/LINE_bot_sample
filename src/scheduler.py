@@ -11,6 +11,9 @@ if __name__ == '__main__':
     # bl_scheduler = BlockingScheduler()
     # bl_scheduler.add_job(push_weather_forecast, 'cron', hour='0, 6, 12')
     # bl_scheduler.start()
+    bl_scheduler = BlockingScheduler()
+    bl_scheduler.add_job(push_weather_forecast, 'cron', hour='0, 6, 12')
+    
     while True:
         users = push_daily_reminder_fetch_users()
         for user in users:
@@ -22,6 +25,4 @@ if __name__ == '__main__':
             bl_scheduler.add_job(push_daily_reminder, 'cron', hour=hour, minute=minute, args=[user])
         sleep(20)
 
-    bl_scheduler = BlockingScheduler()
-    bl_scheduler.add_job(push_weather_forecast, 'cron', hour='0, 6, 12')
     bl_scheduler.start()
