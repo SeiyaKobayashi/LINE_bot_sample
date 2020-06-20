@@ -109,7 +109,7 @@ def push_weather_forecast(time=datetime.now().hour):
         elif time >= 12 and time < 18:
             time_index = 18
         else:
-            time_index = 18
+            time_index = 0
 
         for user in users:
             pref, city = parse_address(user.location)
@@ -117,7 +117,8 @@ def push_weather_forecast(time=datetime.now().hour):
             line_bot_api.push_message(
                 user.line_id,
                 TextSendMessage(
-                    text=str(month)+'月'+str(day)+'日'+forecast[time_index]['time']+'頃の'+pref+city+'の天気は' \
+                    text=user.name+'さん、'+setGreeting(time)+'\n'+str(month)+'月'+str(day)+'日' \
+                        +forecast[time_index]['time']+'頃の'+pref+city+'の天気は' \
                         +forecast[time_index]['Weather']+'、気温は'+forecast[time_index]['Temperature'] \
                         +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index]['Humidity'] \
                         +'\n降水量: '+forecast[time_index]['Precipitation']+'\n風速: '+forecast[time_index]['WindSpeed']
@@ -167,9 +168,9 @@ def callback():
 
 
 def setGreeting(hour):
-    if 5 <= hour and hour <= 9:
+    if 5 <= hour and hour < 10:
         return 'おはようございます！'
-    elif 10 <= hour and hour <= 18:
+    elif 10 <= hour and hour < 18:
         return 'こんにちは！'
     else:
         return 'こんばんは！'
@@ -460,7 +461,7 @@ def message_text(event):
                 text=random.choice(['どういたしまして！', 'こちらこそ製品を使用頂きありがとうございます！', 'いえいえ！'])
             )
         )
-    elif user.name == '':
+    elif user.name == ' ':
         user.name = event.message.text
         db.session.commit()
         line_bot_api.reply_message(
@@ -513,7 +514,7 @@ def sendQuickReply_settings(event, keyword):
 
 def modify_settings(event, user, keyword):
     if keyword == 'name':
-        user.name = ''
+        user.name = ' '     # Note: not '' => True; not ' ' => False
         db.session.commit()
         line_bot_api.reply_message(
             event.reply_token,
