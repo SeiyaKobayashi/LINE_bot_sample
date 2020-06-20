@@ -5,7 +5,6 @@ import os, json, random, string
 from datetime import datetime
 from time import sleep
 from flask import Flask, request, abort
-from apscheduler.schedulers.blocking import BlockingScheduler
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
@@ -19,9 +18,6 @@ from src.models import db, User, Feedback
 from src.weather import parse_address, fetch_weather_driver
 
 app = create_app()
-
-# scheduler = BlockingScheduler()
-# scheduler.start()
 
 # Get chnnel secret and channel access token from environment
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -96,31 +92,29 @@ FAQs = {
 }
 
 
-# # @scheduler.scheduled_job('cron', hour='0, 6, 12')
-# @scheduler.scheduled_job('interval', minutes=3)
-# def push_weather_forecast(time=datetime.now().hour):
-#     users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
-#     month = datetime.now().month
-#     day = datetime.now().day
-#     if time >= 0 and time < 6:
-#         time_index = 6
-#     elif time >= 6 and time < 12:
-#         time_index = 12
-#     elif time >= 12 and time < 18:
-#         time_index = 18
-#
-#     for user in users:
-#         pref, city = parse_address(user.location)
-#         forecast = fetch_weather_driver(pref, city)
-#         line_bot_api.push_message(
-#             user.line_id,
-#             TextSendMessage(
-#                 text=str(month)+'月'+str(day)+'日'+forecast[time_index]['time']+'頃の'+pref+city+'の天気は' \
-#                     +forecast[time_index]['Weather']+'、気温は'+forecast[time_index]['Temperature'] \
-#                     +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index]['Humidity'] \
-#                     +'\n降水量: '+forecast[time_index]['Precipitation']+'\n風速: '+forecast[time_index]['WindSpeed']
-#             )
-#         )
+def push_weather_forecast(time=datetime.now().hour):
+    users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
+    month = datetime.now().month
+    day = datetime.now().day
+    if time >= 0 and time < 6:
+        time_index = 6
+    elif time >= 6 and time < 12:
+        time_index = 12
+    elif time >= 12 and time < 18:
+        time_index = 18
+
+    for user in users:
+        pref, city = parse_address(user.location)
+        forecast = fetch_weather_driver(pref, city)
+        line_bot_api.push_message(
+            user.line_id,
+            TextSendMessage(
+                text=str(month)+'月'+str(day)+'日'+forecast[time_index]['time']+'頃の'+pref+city+'の天気は' \
+                    +forecast[time_index]['Weather']+'、気温は'+forecast[time_index]['Temperature'] \
+                    +'の予報です。詳細な予報については以下をご確認ください。\n\n湿度: '+forecast[time_index]['Humidity'] \
+                    +'\n降水量: '+forecast[time_index]['Precipitation']+'\n風速: '+forecast[time_index]['WindSpeed']
+            )
+        )
 
 
 @app.route("/callback", methods=['POST'])
