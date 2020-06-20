@@ -40,7 +40,7 @@ MSGS_IGNORED = [
 settings = {
     'name': 'LINE Bot内でのユーザー名',
     'location': '天気予報に使用される位置情報',
-    'default_time': '毎日のサプリの摂取時刻'
+    'defaulttime': '毎日のサプリの摂取時刻'
 }
 fb_questions = {
     1: '【質問①】\n\n明日からこの製品が使えなくなるとしたら、どう感じますか?',
@@ -95,6 +95,21 @@ FAQs = {
             }
         }
 }
+
+
+def push_daily_reminder_fetch_users():
+    with app.app_context():
+        return User.query.filter(User.default_time!=None)
+
+
+def push_daily_reminder(user):
+    with app.app_context():
+        line_bot_api.push_message(
+            user.line_id,
+            TextSendMessage(
+                text=user.name+'さん、本日のサプリのお時間です。'
+            )
+        )
 
 
 def push_weather_forecast(time=datetime.now().hour):
