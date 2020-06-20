@@ -131,6 +131,7 @@ def ensureDBConnection(table_name, multiple=False):
                     return User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
             error = None
         except:
+            error = True
             pass
 
         if error:
