@@ -10,8 +10,8 @@ from src.weather import parse_address, fetch_weather_driver
 
 def push_weather_forecast(time):
     users = ensureDBConnection('user', True)
-    month = datetime.fromtimestamp(event.timestamp // 1000).month
-    day = datetime.fromtimestamp(event.timestamp // 1000).day
+    month = datetime.now().month
+    day = datetime.now().day
     time_index = {6: '6時', 12: '12時', 18: '18時', 0: '0時'}
 
     for user in users:
