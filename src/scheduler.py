@@ -11,6 +11,8 @@ if __name__ == '__main__':
         print('name:', user.name)
         hour = user.default_time.split(':')[0] if user.default_time.split(':')[0][0] != '0' else user.default_time.split(':')[0][1]
         minute = user.default_time.split(':')[1] if user.default_time.split(':')[1][0] != '0' else user.default_time.split(':')[1][1]
+        print('hour:', hour)
+        print('minute:', minute)
         scheduler.add_job(push_daily_reminder, 'cron', hour=hour, minute=minute, args=[user])
     scheduler.add_job(push_weather_forecast, 'cron', hour='0, 6, 12')
     scheduler.start()
