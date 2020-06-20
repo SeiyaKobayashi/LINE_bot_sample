@@ -4,7 +4,7 @@
 import sys
 from datetime import datetime
 from linebot.models import TextSendMessage
-from src.app import ensureDBConnection, line_bot_api
+from src.app import line_bot_api
 from src.weather import parse_address, fetch_weather_driver
 from src.models import User
 
