@@ -10,7 +10,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     FollowEvent, MessageEvent, PostbackEvent,
     TextMessage, LocationMessage, TextSendMessage, TemplateSendMessage,
-    MessageAction, PostbackAction, PostbackTemplateAction, LocationAction,
+    MessageAction, PostbackAction, PostbackTemplateAction, LocationAction, DatetimePickerAction,
     ButtonsTemplate, QuickReply, QuickReplyButton,
 )
 from src import create_app
@@ -301,12 +301,13 @@ def message_text(event):
     elif not user.name:
         user.name = event.message.text
         db.session.commit()
-
         line_bot_api.reply_message(
             event.reply_token,
             [
                 TextSendMessage(text=user.name + 'さん、はじめまして！'),
-                TextSendMessage(text='続いて、頻繁に使用するメールアドレスを教えてください。')
+                TextSendMessage(
+                    text='続いて、頻繁に使用するメールアドレスを教えてください。' \
+                    'すでにサプリメントを購入された方は、「診断時に入力したメールアドレス」を教えてください。')
             ]
         )
     # WIP: Check if it matches email registered on ECF
@@ -352,115 +353,121 @@ def message_text(event):
                     'クーポンコードは、画面下メニューの「登録情報」よりご確認頂けます。'
             )
         )
-    else:
-        if event.message.text == '登録情報':
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(
-                    text=user.name+'さんの登録情報は以下の通りです。\n\n' \
-                        'LINE ID: '+user.line_id+'\n' \
-                        'Email: '+user.email+'\n' \
-                        '初回登録クーポンコード: '+user.init_coupon+'\n' \
-                        '定期購入: '+('定期購入中' if user.is_subscribing else '設定されていません')+'\n' \
-                        'サプリ摂取時刻: '+(user.default_time if user.default_time else '設定されていません')+'\n' \
-                        '天気予報: '+('オン' if user.enabled_weather else 'オフ')+'\n' \
-                        'Twitter連携: '+('オン' if user.enabled_twitter else 'オフ')+'\n' \
-                        '招待人数: '+str(user.num_of_referrals)
-                )
+    elif event.message.text == '登録情報':
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text=user.name+'さんの登録情報は以下の通りです。\n\n' \
+                    'LINE ID: '+user.line_id+'\n' \
+                    'Email: '+user.email+'\n' \
+                    '初回登録クーポンコード: '+user.init_coupon+'\n' \
+                    '定期購入: '+('定期購入中' if user.is_subscribing else '設定されていません')+'\n' \
+                    'サプリ摂取時刻: '+(user.default_time if user.default_time else '設定されていません')+'\n' \
+                    '天気予報: '+('オン' if user.enabled_weather else 'オフ')+'\n' \
+                    'Twitter連携: '+('オン' if user.enabled_twitter else 'オフ')+'\n' \
+                    '招待人数: '+str(user.num_of_referrals)
             )
-        elif event.message.text == '設定変更':
+        )
+    elif event.message.text == '設定変更':
+        items = [
+            QuickReplyButton(action=PostbackAction(label='ユーザー名を変更', text='ユーザー名を変更', data='name')),
+            QuickReplyButton(action=PostbackAction(label='位置情報を変更', text='位置情報を変更', data='location')),
+            QuickReplyButton(action=PostbackAction(label='サプリ摂取時刻を変更', text='サプリ摂取時刻を変更', data='default_time')),
+            QuickReplyButton(action=PostbackAction(label='天気予報設定を変更', text='天気予報設定を変更', data='enabled_weather')),
+            QuickReplyButton(action=PostbackAction(label='Twitter連携設定を変更', text='Twitter連携設定を変更', data='enabled_twitter'))
+        ]
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='変更したい項目を下から選択してください。',
+                quick_reply=QuickReply(items=items)
+            )
+        )
+    elif event.message.text == 'フィードバック':
+        if not Feedback.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first():
+            db.session.add(Feedback(line_id=line_bot_api.get_profile(event.source.user_id).user_id))
+            db.session.commit()
+        sendQuickReply_FB(event, 1)
+    elif event.message.text == 'FAQ':
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='何かお困りですか?\n下記の該当する項目から選んでください。',
+                quick_reply=QuickReply(items=generateFAQCategories())
+            )
+        )
+    elif event.message.text == '天気' or event.message.text == '天気予報':
+        if not user.enabled_weather:
             items = [
-                QuickReplyButton(action=PostbackAction(label='ユーザー名を変更', text='ユーザー名を変更', data='name')),
-                QuickReplyButton(action=PostbackAction(label='位置情報を変更', text='位置情報を変更', data='location')),
-                QuickReplyButton(action=PostbackAction(label='サプリ摂取時刻を変更', text='サプリ摂取時刻を変更', data='default_time')),
-                QuickReplyButton(action=PostbackAction(label='天気予報設定を変更', text='天気予報設定を変更', data='enabled_weather')),
-                QuickReplyButton(action=PostbackAction(label='Twitter連携設定を変更', text='Twitter連携設定を変更', data='enabled_twitter'))
+                QuickReplyButton(action=PostbackAction(label="オンにする", text="オンにする", data='enabled_weather=1')),
+                QuickReplyButton(action=PostbackAction(label="オフにする", text="オフにする", data='enabled_weather=0'))
             ]
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='変更したい項目を下から選択してください。',
+                    text='天気予報機能がオフになっているようです。天気予報機能をオンにしますか?',
                     quick_reply=QuickReply(items=items)
                 )
             )
-        elif event.message.text == 'フィードバック':
-            if not Feedback.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first():
-                db.session.add(Feedback(line_id=line_bot_api.get_profile(event.source.user_id).user_id))
-                db.session.commit()
-            sendQuickReply_FB(event, 1)
-        elif event.message.text == 'FAQ':
+        elif not user.location:
+            items = [
+                QuickReplyButton(action=LocationAction(label="位置情報を送る"))
+            ]
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(
-                    text='何かお困りですか?\n下記の該当する項目から選んでください。',
-                    quick_reply=QuickReply(items=generateFAQCategories())
+                    text='位置情報が設定されていないようです。正確な天気予報のため、下記ボタンより位置情報を送ってください。',
+                    quick_reply=QuickReply(items=items)
                 )
             )
-        elif event.message.text == '天気' or event.message.text == '天気予報':
-            if not user.enabled_weather:
-                items = [
-                    QuickReplyButton(action=PostbackAction(label="オンにする", text="オンにする", data='enabled_weather=1')),
-                    QuickReplyButton(action=PostbackAction(label="オフにする", text="オフにする", data='enabled_weather=0'))
-                ]
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(
-                        text='天気予報機能がオフになっているようです。天気予報機能をオンにしますか?',
-                        quick_reply=QuickReply(items=items)
-                    )
-                )
-            elif not user.location:
-                items = [
-                    QuickReplyButton(action=LocationAction(label="位置情報を送る"))
-                ]
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(
-                        text='位置情報が設定されていないようです。正確な天気予報のため、下記ボタンより位置情報を送ってください。',
-                        quick_reply=QuickReply(items=items)
-                    )
-                )
-            else:
-                pref, city = parse_address(user.location)
-                with open('src/areas.json') as f:
-                    city_ids = json.load(f)
-                    if not city in city_ids[pref]:
-                        line_bot_api.reply_message(
-                            event.reply_token,
-                            TextSendMessage(text='この天気予報はお住まいの地域には対応していないようです...\n今後のアップデートをお待ちください。')
-                        )
-                    else:
-                        items = [
-                            QuickReplyButton(
-                                action=PostbackAction(label=time, text=time, data='display_time='+time)
-                            ) for time in ['すべてみる', '9時', '12時', '15時', '18時', '21時', '0時', '3時', '6時']
-                        ]
-                        line_bot_api.reply_message(
-                            event.reply_token,
-                            TextSendMessage(
-                                text='何時頃の天気予報を表示しますか?',
-                                quick_reply=QuickReply(items=items)
-                            )
-                        )
-        # WIP
-        elif event.message.text == 'Twitter':
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text='Twitter連携機能は現在開発中です...')
-            )
-        elif '感謝' in event.message.text or 'ありがとう' in event.message.text:
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(
-                    text=random.choice(['どういたしまして！', 'こちらこそ製品を使用頂きありがとうございます！', 'いえいえ！'])
-                )
-            )
-        # WIP
         else:
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text='会話機能は現在開発中です...')
+            pref, city = parse_address(user.location)
+            with open('src/areas.json') as f:
+                city_ids = json.load(f)
+                if not city in city_ids[pref]:
+                    line_bot_api.reply_message(
+                        event.reply_token,
+                        TextSendMessage(text='この天気予報はお住まいの地域には対応していないようです...\n今後のアップデートをお待ちください。')
+                    )
+                else:
+                    items = [
+                        QuickReplyButton(
+                            action=PostbackAction(label=time, text=time, data='display_time='+time)
+                        ) for time in ['すべてみる', '9時', '12時', '15時', '18時', '21時', '0時', '3時', '6時']
+                    ]
+                    line_bot_api.reply_message(
+                        event.reply_token,
+                        TextSendMessage(
+                            text='何時頃の天気予報を表示しますか?',
+                            quick_reply=QuickReply(items=items)
+                        )
+                    )
+    # WIP
+    elif event.message.text == 'Twitter':
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='Twitter連携機能は現在開発中です...')
+        )
+    elif '感謝' in event.message.text or 'ありがとう' in event.message.text:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text=random.choice(['どういたしまして！', 'こちらこそ製品を使用頂きありがとうございます！', 'いえいえ！'])
             )
+        )
+    elif user.name == '':
+        user.name = event.message.text
+        db.session.commit()
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='ユーザー名を '+user.name+' に変更しました。'),
+        )
+    # WIP
+    else:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='会話機能は現在開発中です...')
+        )
 
 
 @handler.add(MessageEvent, message=LocationMessage)
@@ -497,6 +504,66 @@ def sendQuickReply_settings(event, keyword):
         event.reply_token,
         TextSendMessage(text=keyword+'を変更しますか？', quick_reply=QuickReply(items=items))
     )
+
+
+def modify_settings(event, user, keyword):
+    if keyword == 'name':
+        user.name = ''
+        db.session.commit()
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='新しいユーザー名を入力してください。\n\n旧ユーザー名: '+user.name
+            )
+        )
+    elif keyword == 'location':
+        items = [QuickReplyButton(action=LocationAction(label="位置情報を送る"))]
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='下のボタンから新しい位置情報を送信してください。',
+                quick_reply=QuickReply(items=items)
+            )
+        )
+    elif keyword == 'default_time':
+        current_time = datetime.now()
+        init_time = ('0'+str(current_time.hour) if len(str(current_time.hour))==1 else str(current_time.hour)) \
+        +':'+('0'+str(current_time.minute) if len(str(current_time.minute))==1 else str(current_time.minute))
+        items = [
+            QuickReplyButton(
+                action=DatetimePickerAction(
+                    label="サプリのリマインド時刻を設定する",
+                    data="set_default_time",
+                    mode="time",
+                    initial=init_time
+                )
+            )
+        ]
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='サプリメントは毎日の継続が最重要。リマインドを送って欲しい時刻を選択してください。' \
+                    'このBotは、毎日指定された時刻にリマインドを送ります。',
+                quick_reply=QuickReply(items=items)
+            )
+        )
+    elif keyword == 'enabled_weather':
+        items = [
+            QuickReplyButton(action=PostbackAction(label="はい", text="はい", data='enabled_weather='+('0' if user.enabled_weather else '1'))),
+            QuickReplyButton(action=PostbackAction(label="いいえ", text="いいえ", data='enabled_weather='+('1' if user.enabled_weather else '0')))
+        ]
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='現在は、天気予報機能が'+('オン' if user.enabled_weather else 'オフ')+'になっています。天気予報機能を'+('オフ' if user.enabled_weather else 'オン')+'にしますか?',
+                quick_reply=QuickReply(items=items)
+            )
+        )
+    elif keyword == 'enabled_twitter':
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='Twitter連携機能は現在開発中です...')
+        )
 
 
 def display_weather_info(event, time, pref, city, forecast):
@@ -536,6 +603,15 @@ def on_postback(event):
         sendQuickReply_settings(event, '天気予報に使用される位置情報')
     elif event.postback.data == 'default_time':
         sendQuickReply_settings(event, '毎日のサプリの摂取時刻')
+    elif event.postback.data == 'set_default_time':
+        user.default_time = event.postback.params['time']
+        db.session.commit()
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='サプリメントのリマインド時刻を '+user.default_time+' に設定しました。'
+            )
+        )
     elif event.postback.data == 'enabled_weather':
         items = [
             QuickReplyButton(action=PostbackAction(label="はい", text="はい", data='enabled_weather='+('0' if user.enabled_weather else '1'))),
@@ -562,10 +638,14 @@ def on_postback(event):
         )
     elif 'modify' in event.postback.data:
         keyword = event.postback.data.split('=')[0].split('_')[1]
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text='設定機能は現在開発中です...')
-        )
+        yes = event.postback.data.split('=')[1]
+        if yes == '1':
+            modify_settings(event, user, keyword)
+        else:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text='変更を取りやめました。')
+            )
     elif 'category_id' in event.postback.data:
         if 'question_id' in event.postback.data:
             category_id = event.postback.data.split('=')[1].split('&')[0]
