@@ -214,19 +214,19 @@ def sendQuickReply_FB(event, q_num):
 
 def generateFAQCategories(confirm=False):
     if confirm:
-        return [
+        return [QuickReplyButton(
+            action=PostbackAction(
+                label='特になし',
+                text='特になし',
+                data='faq_done=1')
+        )] + [
             QuickReplyButton(
                 action=PostbackAction(
                     label=FAQs[category_id]['category'],
                     text=FAQs[category_id]['category'],
                     data='category_id='+str(category_id))
             ) for category_id in FAQs
-        ] + [QuickReplyButton(
-            action=PostbackAction(
-                label='特になし',
-                text='特になし',
-                data='faq_done=1')
-        )]
+        ]
     else:
         return [
             QuickReplyButton(
