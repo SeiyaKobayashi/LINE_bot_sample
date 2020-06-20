@@ -2,7 +2,7 @@
 # scheduler.py
 
 from apscheduler.schedulers.blocking import BlockingScheduler
-from src import push_weather_forecast
+from src.app import push_weather_forecast
 
 if __name__ == '__main__':
     scheduler = BlockingScheduler()
