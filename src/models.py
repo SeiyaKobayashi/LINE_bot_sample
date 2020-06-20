@@ -46,3 +46,18 @@ class User(db.Model):
         self.num_of_feedbacks = num_of_feedbacks
         self.enabled_weather  = enabled_weather
         self.enabled_twitter  = enabled_twitter
+
+
+class Feedback(db.Model):
+    __tablename__    = 'Feedback'
+    id      = db.Column(db.Integer, primary_key=True)
+    line_id = db.Column(db.String(255), nullable=False, unique=True)
+    Q1      = db.Column(db.Integer)
+    Q2      = db.Column(db.Integer)
+    Q3      = db.Column(db.Integer)
+
+    def __init__(self, line_id, Q1=None, Q2=None, Q3=None):
+        self.line_id = line_id
+        self.Q1      = line_id
+        self.Q2      = line_id
+        self.Q3      = line_id

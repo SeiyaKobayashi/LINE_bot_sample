@@ -221,12 +221,12 @@ def generateFAQCategories(confirm=False):
                     text=FAQs[category_id]['category'],
                     data='category_id='+str(category_id))
             ) for category_id in FAQs
-        ].append(QuickReplyButton(
+        ] + [QuickReplyButton(
             action=PostbackAction(
                 label='特になし',
                 text='特になし',
                 data='faq_done=1')
-        ))
+        )]
     else:
         return [
             QuickReplyButton(
@@ -332,6 +332,8 @@ def message_text(event):
                 )
             )
         elif event.message.text == 'フィードバック':
+            db.session.add(Feedback(line_id=line_bot_api.get_profile(event.source.user_id).user_id))
+            db.session.commit()
             sendQuickReply_FB(event, 1)
         elif event.message.text == 'FAQ':
             line_bot_api.reply_message(
@@ -602,12 +604,19 @@ def on_postback(event):
         pref, city = parse_address(user.location)
         forecast = fetch_weather_driver(pref, city)
         display_weather_info(event, event.postback.data.split('=')[1], pref, city, forecast)
-    else:
-        if '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=1':
+    elif 'qid' in event.postback.data:
+        if event.postback.data.split('&')[0] == 'qid=1':
+            FB = Feedback.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+            FB.Q1 = int(event.postback.data.split('=')[2])
+            db.session.commit()
             sendQuickReply_FB(event, 2)
-        elif '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=2':
+        elif event.postback.data.split('&')[0] == 'qid=2':
+            FB.Q2 = int(event.postback.data.split('=')[2])
+            db.session.commit()
             sendQuickReply_FB(event, 3)
-        elif '&' in event.postback.data and event.postback.data.split('&')[0] == 'qid=3':
+        elif event.postback.data.split('&')[0] == 'qid=3':
+            FB.Q3 = int(event.postback.data.split('=')[2])
+            db.session.commit()
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(text='ご回答ありがとうございます！フィードバックは、今後のサービス改善に役立たせて頂きます。')
