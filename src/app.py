@@ -292,10 +292,10 @@ def message_text(event):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='初期設定は以上となります。今後の基本操作は、画面下のメニューから行なってください。\n' \
-                    'またこの度、LINE Botに登録してくださったお礼に、月々のお支払い等でご利用頂ける限定クーポンを発行致しました。\n' \
-                    +user.name+'さんのクーポンコードは、\n\n'+user.init_coupon+'\n\nです。。\n' \
-                    'このコードを決済画面で入力することで、決済金額が「1000円引き」となります。' \
+                text='初期設定は以上となります。今後の基本操作は、画面下のメニューから行なってください。\n\n' \
+                    'またこの度、LINE Botに登録してくださったお礼に、月々のお支払い等でご利用頂ける限定クーポンを発行致しました。\n\n' \
+                    +user.name+'さんのクーポンコードは、\n\n'+user.init_coupon+'\n\nです。\n\n' \
+                    'このコードを決済画面で入力することで、決済金額が1000円引きとなります。' \
                     'ただし、本クーポンのご利用期限は本日より3ヶ月となっておりますので、予めご注意ください。' \
                     'クーポンコードは、画面下メニューの「登録情報」よりご確認頂けます。'
             )
@@ -322,7 +322,7 @@ def message_text(event):
                 QuickReplyButton(action=PostbackAction(label='位置情報 (天気予報のため)', text='位置情報 (天気予報のため)', data='location')),
                 QuickReplyButton(action=PostbackAction(label='サプリ摂取時刻', text='サプリ摂取時刻', data='default_time')),
                 QuickReplyButton(action=PostbackAction(label='天気予報', text='天気予報', data='enabled_weather')),
-                QuickReplyButton(action=PostbackAction(label='Twitter連携', text='Twitter連携', data='enabled_twitter')),
+                QuickReplyButton(action=PostbackAction(label='Twitter連携', text='Twitter連携', data='enabled_twitter'))
             ]
             TextSendMessage(
                 text='変更したい項目を下から選択してください。',
@@ -502,6 +502,8 @@ def on_postback(event):
         )
     elif 'category_id' in event.postback.data:
         category_id = event.postback.data.split('=')[1]
+        print('category_id:', type(category_id))
+        print('FAQs[category_id]:', FAQs[category_id])
         if 'question_id' in event.postback.data:
             question_id = event.postback.data.split('=')[2]
             line_bot_api.reply_message(
