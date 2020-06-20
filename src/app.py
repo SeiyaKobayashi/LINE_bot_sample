@@ -148,12 +148,15 @@ def ensureDBConnection(table_name, multiple=False):
     for _ in range(max_num_retries):
         try:
             if table_name == 'user':
+                print('enter')
                 if multiple:
                     return User.query.filter_by(User.enabled_weather==True, User.location!=None)
                 else:
+                    print('ok')
                     return User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
             error = None
         except:
+            print('error')
             pass
 
         if error:
