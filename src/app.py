@@ -102,6 +102,8 @@ def push_weather_forecast(time=datetime.now().hour):
         time_index = 12
     elif time >= 12 and time < 18:
         time_index = 18
+    else:
+        time_index = 18
 
     for user in users:
         pref, city = parse_address(user.location)
