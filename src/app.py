@@ -118,30 +118,30 @@ def callback():
     return 'OK'
 
 
-# WIP: there might be better solutions (i.e., https://flask-sqlalchemy.palletsprojects.com/en/2.x/config/)
-def ensureDBConnection(table_name, multiple=False):
-    duration = 2
-    max_num_retries = 5
-    for _ in range(max_num_retries):
-        try:
-            if table_name == 'user':
-                if multiple:
-                    users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
-                    error = None
-                else:
-                    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
-                    error = None
-        except:
-            error = True
-            pass
-        finally:
-            if error:
-                sleep(duration)
-                duration *= 2
-            else:
-                break
-
-    return users if multiple else user
+# # WIP: there might be better solutions (i.e., https://flask-sqlalchemy.palletsprojects.com/en/2.x/config/)
+# def ensureDBConnection(table_name, multiple=False):
+#     duration = 2
+#     max_num_retries = 5
+#     for _ in range(max_num_retries):
+#         try:
+#             if table_name == 'user':
+#                 if multiple:
+#                     users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
+#                     error = None
+#                 else:
+#                     user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
+#                     error = None
+#         except:
+#             error = True
+#             pass
+#         finally:
+#             if error:
+#                 sleep(duration)
+#                 duration *= 2
+#             else:
+#                 break
+#
+#     return users if multiple else user
 
 
 def setGreeting(hour):
@@ -156,7 +156,7 @@ def setGreeting(hour):
 @handler.add(FollowEvent)
 def message_init(event):
 
-    user = ensureDBConnection('user')
+    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp // 1000).time().hour)
 
     if user:     # If user account already exists (i.e., past user)
@@ -276,7 +276,7 @@ def generateFAQCategories(confirm=False):
 @handler.add(MessageEvent, message=TextMessage)
 def message_text(event):
 
-    user = ensureDBConnection('user')
+    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
     greeting = setGreeting(datetime.fromtimestamp(event.timestamp // 1000).time().hour)
 
     if event.message.text in MSGS_IGNORED:
@@ -448,7 +448,7 @@ def message_text(event):
 
 @handler.add(MessageEvent, message=LocationMessage)
 def message_location(event):
-    user = ensureDBConnection('user')
+    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
     user.location = event.message.address
     db.session.commit()
 
@@ -511,7 +511,7 @@ def display_weather_info(event, time, pref, city, forecast):
 
 @handler.add(PostbackEvent)
 def on_postback(event):
-    user = ensureDBConnection('user')
+    user = User.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
 
     if event.postback.data == 'name':
         sendQuickReply_settings(event, 'LINE Bot内でのユーザー名')

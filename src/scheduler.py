@@ -6,10 +6,11 @@ from datetime import datetime
 from linebot.models import TextSendMessage
 from src.app import ensureDBConnection, line_bot_api
 from src.weather import parse_address, fetch_weather_driver
+from src.models import User
 
 
 def push_weather_forecast(time):
-    users = ensureDBConnection('user', True)
+    users = User.query.filter_by(User.enabled_weather==True, User.location!=None)
     month = datetime.now().month
     day = datetime.now().day
     time_index = {6: '6時', 12: '12時', 18: '18時', 0: '0時'}
