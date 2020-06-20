@@ -614,8 +614,8 @@ def on_postback(event):
         forecast = fetch_weather_driver(pref, city)
         display_weather_info(event, event.postback.data.split('=')[1], pref, city, forecast)
     elif 'qid' in event.postback.data:
+        FB = Feedback.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
         if event.postback.data.split('&')[0] == 'qid=1':
-            FB = Feedback.query.filter_by(line_id=line_bot_api.get_profile(event.source.user_id).user_id).first()
             FB.Q1 = int(event.postback.data.split('=')[2])
             db.session.commit()
             sendQuickReply_FB(event, 2)
