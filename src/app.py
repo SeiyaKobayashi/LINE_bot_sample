@@ -19,7 +19,9 @@ from src.models import db, User, Feedback
 from src.weather import parse_address, fetch_weather_driver
 
 app = create_app()
+
 scheduler = BlockingScheduler()
+scheduler.start()
 
 # Get chnnel secret and channel access token from environment
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -700,4 +702,3 @@ def on_postback(event):
 
 if __name__ == "__main__":
     app.run()
-    scheduler.start()
