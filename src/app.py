@@ -112,6 +112,10 @@ def push_daily_reminder(user):
         )
 
 
+def prevent_sleep():
+    print('This is just to keep the app running (runs every 30 mins).')
+
+
 def push_weather_forecast(time=datetime.now().hour):
     with app.app_context():
         index = {'0時': 0, '3時': 1, '6時': 2, '9時': 3, '12時': 4, '15時': 5, '18時': 6, '21時': 7}
